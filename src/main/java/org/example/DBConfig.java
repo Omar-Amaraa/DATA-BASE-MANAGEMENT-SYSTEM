@@ -8,9 +8,21 @@ import java.io.IOException;
 
 public class DBConfig {
     String dbpath;
+    long pagesize;
+    long dm_maxfilesize;
 
-    public DBConfig(String dbpath) {
+    public DBConfig(String dbpathlong,long pagesize, long dm_maxfilesize) {
         this.dbpath = dbpath;
+        this.pagesize = pagesize;
+        this.dm_maxfilesize = dm_maxfilesize;
+    }
+
+    public long getPagesize() {
+        return pagesize;
+    }
+
+    public long getDm_maxfilesize() {
+        return dm_maxfilesize;
     }
 
     public String getDbpath() {
@@ -18,27 +30,19 @@ public class DBConfig {
     }
 
     public static DBConfig loadDBConfig(String fichier_config){
-        DBConfig config = new DBConfig(fichier_config);
 
         JSONParser jsonP = new JSONParser();
         try {
-            JSONObject jsonO = (JSONObject)jsonP.parse(new FileReader(fichier_config));
-            String name = (String) jsonO.get("name");
-            String age = (String) jsonO.get("age");
-            String address = (String) jsonO.get("address");
-            System.out.println("Name :"+ name);
-            System.out.println("Age: "+ age);
-            System.out.println("Address: "+ address);
-            return config;
+            JSONObject jsonO = (JSONObject) jsonP.parse(new FileReader(fichier_config));
+            String dbpath = (String) jsonO.get("dbpath");
+            long pagesize = (long) jsonO.get("pagesize");
+            long dm_maxfilesize = (long) jsonO.get("dm_maxfilesize");
 
-        } catch (FileNotFoundException e) {
+            return new DBConfig(dbpath, pagesize, dm_maxfilesize);
+        } catch (IOException | ParseException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
+            return null;
         }
-        return null;
 
 
     }
