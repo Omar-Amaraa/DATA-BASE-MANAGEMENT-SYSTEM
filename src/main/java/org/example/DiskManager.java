@@ -51,33 +51,24 @@ public class DiskManager {
         return file;
     }
     /// verifie s'il n'y a plus de place et cree un fichier
+/// verifie s'il n'y a plus de place et cree un fichier
 
     public void verif(File fileTest)
     {
-            if (fileTest.length() == dbConfiginstance.getDm_maxfilesize())
-            {
-                String path = createEmptyJSONFile();
-
-                Map<String, String> map = new HashMap<>();
-
-                //crée un fichier vide si il n'y a plus de place dans les fichiers
-
-                JSONObject json = new JSONObject(map);
-                try {
-                    assert path != null;
-                    try (PrintWriter out = new PrintWriter(new FileWriter(path)))
-
-                    {
-                        out.write(json.toString());
-                    }
+            File[] liste=fileTest.listFiles();
+            for (File itemFile : liste) {
+                if (itemFile.isFile()) {
+                    if (itemFile.length()== dbConfiginstance.getDm_maxfilesize()){
+                        createEmptyFile();
                 }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
+            }
 
         }
 }
+    
+
+        
+
     public PageId allocPage() {
         /*Si une page désallouée précédemment elle est forcément disponible dans la liste
         des freePages , donc l’utiliser , donc on eneleve un element de la liste des pages non utilisées*/
