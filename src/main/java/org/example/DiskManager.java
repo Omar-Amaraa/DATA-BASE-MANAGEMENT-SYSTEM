@@ -26,32 +26,29 @@ public class DiskManager {
     }
 
 /// méthode pour créer un jsonfile vide dans le dossier files
-    public static String createEmptyJSONFile() {
+   public static File createEmptyFile() {
+        String path = "C:/PROJET_BDDA_alpha/BinData" + countFiles;
+        // Créer une instance File avec le chemin spécifié
 
+
+        File file = null;
         try {
-            // Créer une instance File avec le chemin spécifié
-            File file = new File("C:/PROJET_BDDA_alpha/files"+ countFiles +".json");
-            String filePath = file.getAbsolutePath();
-
+            file = new File(path);
             // Créer le fichier s'il n'existe pas
-            if (file.createNewFile()) {
-                System.out.println("Fichier JSON vide créé à : " + "C:/PROJET_BDDA_alpha/files");
-                countFiles++;
-                return filePath;
-            } else {
-                System.out.println("Le fichier existe déjà à : " + "C:/PROJET_BDDA_alpha/files");
-            }
-
-            // Vérification si le fichier a été créé ou s'il est vide
-            try (FileWriter writer = new FileWriter(file)) {
-                writer.write("");  // Écrire un contenu vide
+            if (!file.exists()) {
+                if (file.createNewFile()) {
+                    System.out.println("Fichier JSON vide créé à : " + path);
+                    countFiles++;
+                } else {
+                    System.out.println("Le fichier existe déjà à : " + path);
+                }
             }
 
         } catch (IOException e) {
             System.out.println("Erreur lors de la création du fichier JSON.");
             e.printStackTrace();
         }
-        return null;
+        return file;
     }
     /// verifie s'il n'y a plus de place et cree un fichier
 
