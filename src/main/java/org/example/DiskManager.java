@@ -11,7 +11,8 @@ public class DiskManager
 {
 
     private DBConfig dbConfiginstance;
-    private Stack<PageId> freePages;
+    private Stack<PageId> freePages; // plus pratique avec les Piles comme on va de toutes facons utiliser le dernier element
+    //comme ca on peut utiliser les fonctions prédéfinies de la Classe Stack isEmpty() et pop() 
     private static int countFiles = 0;
 
     ///constructors
