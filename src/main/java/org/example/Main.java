@@ -1,5 +1,7 @@
 package org.example;
-import java.io.*;
+import java.io.IOException;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -8,8 +10,7 @@ public class Main {
         public static void main(String[] args) {
             JSONParser jsonP = new JSONParser();
             try {
-                JSONObject jsonO = (JSONObject)jsonP.parse(new FileReader("C:/PROJET_BDDA/files/dataset_1.json"));
-
+                JSONObject jsonO = (JSONObject)jsonP.parse(new FileReader("/Users/phuongnhichau/PROJET_BDDA_alpha/files/dataset_1.json"));
                 String name = (String) jsonO.get("name");
                 String age = (String) jsonO.get("age");
                 String address = (String) jsonO.get("address");
