@@ -6,9 +6,8 @@ public class PageId {
 
     private int pageIdx;
 
-    public PageId(int fileIdx, int pageNumber, int pageIdx) {
+    public PageId(int fileIdx, int pageIdx) {
         this.fileIdx = fileIdx;
-        this.pageNumber = pageNumber;
         this.pageIdx = pageIdx;
     }
 

@@ -1,99 +1,76 @@
 package org.example;
 
-import org.json.JSONObject;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-public class DiskManager {
+
+import java.io.*;
+import java.util.*;
+
+public class DiskManager
+{
 
     private DBConfig dbConfiginstance;
-    private List<PageId> freePages;
+    private Stack<PageId> freePages;
     private static int countFiles = 0;
 
     ///constructors
     public DiskManager(DBConfig dbConfiginstance, String dbPath) {
 
         this.dbConfiginstance = new DBConfig(dbConfiginstance.getDbpath(),dbConfiginstance.getPagesize(),dbConfiginstance.getDm_maxfilesize());
-        this.freePages = new LinkedList<>();
+        this.freePages = new Stack<>();
 
     }
 
 /// méthode pour créer un jsonfile vide dans le dossier files
-    public static String createEmptyJSONFile() {
+    public static File createEmptyFile() {
+        String path = "C:/PROJET_BDDA_alpha/BinData" + "/F"+countFiles;
+        // Créer une instance File avec le chemin spécifié
+        File file = null;
+        if (!Files.exists(Paths.get(path))) {
+            try {
+                file = new File(path);
+                // Créer le fichier s'il n'existe pas
 
-        try {
-            // Créer une instance File avec le chemin spécifié
-            File file = new File("C:/PROJET_BDDA_alpha/files"+ countFiles +".json");
-            String filePath = file.getAbsolutePath();
+                if (file.createNewFile()) {
+                    System.out.println("Fichier binaire vide a été créé à : " + path);
+                    countFiles++;
+                } else {
+                    System.out.println("Le fichier existe déjà à : " + path);
+                }
 
-            // Créer le fichier s'il n'existe pas
-            if (file.createNewFile()) {
-                System.out.println("Fichier JSON vide créé à : " + "C:/PROJET_BDDA_alpha/files");
-                countFiles++;
-                return filePath;
-            } else {
-                System.out.println("Le fichier existe déjà à : " + "C:/PROJET_BDDA_alpha/files");
+
+            } catch (IOException e) {
+                System.out.println("Erreur lors de la création du fichier JSON.");
+                e.printStackTrace();
             }
+        }
+        return file;
+    }
+    /// verifie s'il n'y a plus de place et cree un fichier
+    public  PageId AllocPage()
+    {
 
-            // Vérification si le fichier a été créé ou s'il est vide
-            try (FileWriter writer = new FileWriter(file)) {
-                writer.write("");  // Écrire un contenu vide
+        if (!freePages.isEmpty())
+        {
+            return freePages.pop();
+        }
+        File fichierCourant = new File("C:/PROJET_BDDA_alpha/BinData" + "/F"+countFiles+".rsdb");
+        if(!fichierCourant.exists())
+        {
+            if (fichierCourant.length()!=dbConfiginstance.getDm_maxfilesize())
+            {
+                int idPage = (int) ((dbConfiginstance.getDm_maxfilesize()- fichierCourant.length())/ dbConfiginstance.getPagesize());
+                return new PageId(countFiles,idPage);
             }
-
-        } catch (IOException e) {
-            System.out.println("Erreur lors de la création du fichier JSON.");
-            e.printStackTrace();
+            else
+            {
+                createEmptyFile();
+                return new PageId(countFiles,0);
+            }
         }
         return null;
     }
-    /// verifie s'il n'y a plus de place et cree un fichier
 
-    public void verif(File fileTest)
-    {
-            if (fileTest.length() == dbConfiginstance.getDm_maxfilesize())
-            {
-                String path = createEmptyJSONFile();
-
-                Map<String, String> map = new HashMap<>();
-
-                //crée un fichier vide si il n'y a plus de place dans les fichiers
-
-                JSONObject json = new JSONObject(map);
-                try {
-                    assert path != null;
-                    try (PrintWriter out = new PrintWriter(new FileWriter(path)))
-
-                    {
-                        out.write(json.toString());
-                    }
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-
-        }
-}
-    public PageId allocPage() {
-        /*Si une page désallouée précédemment elle est forcément disponible dans la liste
-        des freePages , donc l’utiliser , donc on eneleve un element de la liste des pages non utilisées*/
-
-
-        if (!freePages.isEmpty()) {
-            return freePages.removeFirst();
-        }
-        //verifie si toutes les fichiers sont a leur taille maximale
-        //////////////////////
-
-
-        return  null;
-    }
 }
 
