@@ -1,10 +1,12 @@
 package org.example;
+import java.io.Serializable;
 
-public class PageId {
+public class PageId  implements Serializable {
     private int fileIdx;  // Index du fichier
     private int pageNumber;  // Numéro de la page dans le fichier
-
     private int pageIdx;
+    private static final long serialVersionUID = 1L;
+
 
     public PageId(int fileIdx, int pageIdx) {
         this.fileIdx = fileIdx;
