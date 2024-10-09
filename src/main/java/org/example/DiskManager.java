@@ -1,6 +1,9 @@
 package org.example;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,5 +58,45 @@ public class DiskManager {
             return new PageId(fileIdx, pageIdx);
         }
     }
+
+    public void WritePage(PageId p , ByteBuffer buff){
+        try{
+            String path = "C:/PROJET_BDDA_alpha/BinData/"+"F"+p.getFileIdx()+"rsdb";
+            if(Files.exists(Paths.get(path))){
+                RandomAccessFile file= new RandomAccessFile(path,"rw");
+                file.seek((p.getPageIdx()+1)*this.config.getPagesize());
+                file.write(buff.array());
+            }else{
+                System.out.println("Le fichier n'existe pas");
+                File newFile = createFile(p.getFileIdx());
+                RandomAccessFile file = new RandomAccessFile(newFile, "rw");
+                file.setLength(this.config.getDm_maxfilesize());
+                file.seek(0); // Se déplacer au début du fichier
+                file.write(buff.array());
+            }
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    public void ReadPage(PageId p, ByteBuffer buff) {
+        try {
+            String path = "C:/PROJET_BDDA_alpha/BinData/" + "F" + p.getFileIdx() + ".rsdb";
+
+            // Vérifier si le fichier existe avant de lire
+            if (Files.exists(Paths.get(path))) {
+                RandomAccessFile file = new RandomAccessFile(path, "r");
+                file.seek(p.getPageIdx() * this.config.getPagesize());
+                byte[] pageData = new byte[this.config.getPagesize()]; // Création d'un tableau de bytes pour lire les données
+                file.readFully(pageData); // Lire les données de la page
+                buff.put(pageData); // Remplir le buffer fourni avec les données lues
+                file.close(); // Fermer le fichier après la lecture
+            } else {
+                System.out.println("Le fichier spécifié n'existe pas : " + path);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
 
