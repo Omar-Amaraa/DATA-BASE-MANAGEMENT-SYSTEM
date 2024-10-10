@@ -1,8 +1,7 @@
 package org.example;
-
 import java.io.Serializable;
 
-public class PageId implements Serializable {
+public class PageId  implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int fileIdx;
@@ -16,7 +15,6 @@ public class PageId implements Serializable {
     public int getFileIdx() {
         return fileIdx;
     }
-
     public int getPageIdx() {
         return pageIdx;
     }
