@@ -1,21 +1,23 @@
 package org.example;
-
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-
-
 import java.io.*;
 import java.util.*;
+
+import static java.nio.file.Files.createFile;
 
 public class DiskManager {
 
     private static DBConfig dbConfiginstance;
     private static Stack<PageId> freePages = new Stack<>(); // plus pratique avec les Piles comme on va de toutes facons utiliser le dernier element
-    //comme ca on peut utiliser les fonctions prédéfinies de la Classe Stack isEmpty() et pop() 
+    //comme ca on peut utiliser les fonctions prédéfinies de la Classe Stack isEmpty() et pop()
     private static int countFiles = 0;
 
     /// constructors
-    public DiskManager(DBConfig dbConfiginstance, String dbPath) {
+    public DiskManager(DBConfig dbConfiginstance) {
 
         this.dbConfiginstance = new DBConfig(dbConfiginstance.getDbpath(), dbConfiginstance.getPagesize(), dbConfiginstance.getDm_maxfilesize(), dbConfiginstance.getBm_buffercount(), dbConfiginstance.getBm_policy());
 
@@ -102,6 +104,43 @@ public class DiskManager {
     }
     public Stack<PageId> getFreePages() {
         return freePages;
+    }
+    public void WritePage(PageId p , ByteBuffer buff){
+        try{
+            String path = "./BinData/"+"F"+p.getFileIdx()+"rsdb";
+            if(Files.exists(Paths.get(path))){
+                RandomAccessFile file= new RandomAccessFile(path,"rw");
+                file.seek((p.getPageIdx()+1)*this.dbConfiginstance.getPagesize());
+                file.write(buff.array());
+            }else{
+                System.out.println("Le fichier n'existe pas");
+                RandomAccessFile file = new RandomAccessFile(path, "rw");
+                file.setLength(this.dbConfiginstance.getDm_maxfilesize());
+                file.seek(0); // Se déplacer au début du fichier
+                file.write(buff.array());
+            }
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    public void ReadPage(PageId p, ByteBuffer buff) {
+        try {
+            String path = "./BinData/" + "F" + p.getFileIdx() + ".rsdb";
+
+            // Vérifier si le fichier existe avant de lire
+            if (Files.exists(Paths.get(path))) {
+                RandomAccessFile file = new RandomAccessFile(path, "r");
+                file.seek(p.getPageIdx() * this.dbConfiginstance.getPagesize());
+                byte[] pageData = new byte[this.dbConfiginstance.getPagesize()]; // Création d'un tableau de bytes pour lire les données
+                file.readFully(pageData); // Lire les données de la page
+                buff.put(pageData); // Remplir le buffer fourni avec les données lues
+                file.close(); // Fermer le fichier après la lecture
+            } else {
+                System.out.println("Le fichier spécifié n'existe pas : " + path);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 

@@ -58,4 +58,5 @@ public class DBConfig {
             throw new IllegalArgumentException("Error reading configuration file", e);
         }
     }
-    }
+}
+
