@@ -41,12 +41,13 @@ public class DiskManagerTests {
         System.out.println("State loaded. Free pages: " + dm.getFreePages());
     }
     public static void main(String[] args) {
-
+        TestLoadState();
         PageId pid= TestAllocPage();
         TestLoadState();
         TestSaveState();
         TestDeallocPage(pid);
         TestSaveState();
         TestLoadState();
+
     }
 }

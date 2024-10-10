@@ -9,7 +9,7 @@ import java.util.*;
 
 public class DiskManager {
 
-    private DBConfig dbConfiginstance;
+    private static DBConfig dbConfiginstance;
     private static Stack<PageId> freePages = new Stack<>(); // plus pratique avec les Piles comme on va de toutes facons utiliser le dernier element
     //comme ca on peut utiliser les fonctions prédéfinies de la Classe Stack isEmpty() et pop() 
     private static int countFiles = 0;
@@ -17,7 +17,7 @@ public class DiskManager {
     /// constructors
     public DiskManager(DBConfig dbConfiginstance, String dbPath) {
 
-        this.dbConfiginstance = new DBConfig(dbConfiginstance.getDbpath(), dbConfiginstance.getPagesize(), dbConfiginstance.getDm_maxfilesize());
+        this.dbConfiginstance = new DBConfig(dbConfiginstance.getDbpath(), dbConfiginstance.getPagesize(), dbConfiginstance.getDm_maxfilesize(), dbConfiginstance.getBm_buffercount(), dbConfiginstance.getBm_policy());
 
     }
 
