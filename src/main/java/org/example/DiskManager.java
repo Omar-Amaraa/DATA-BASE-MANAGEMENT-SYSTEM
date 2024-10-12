@@ -1,13 +1,10 @@
 package org.example;
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.*;
 import java.util.*;
-
-import static java.nio.file.Files.createFile;
 
 public class DiskManager {
 
@@ -16,14 +13,27 @@ public class DiskManager {
     //comme ca on peut utiliser les fonctions prédéfinies de la Classe Stack isEmpty() et pop()
     private static int countFiles = 0;
 
-    /// constructors
+    /// constructeur
     public DiskManager(DBConfig dbConfiginstance) {
-
-        this.dbConfiginstance = new DBConfig(dbConfiginstance.getDbpath(), dbConfiginstance.getPagesize(), dbConfiginstance.getDm_maxfilesize(), dbConfiginstance.getBm_buffercount(), dbConfiginstance.getBm_policy());
-
+        DiskManager.dbConfiginstance = dbConfiginstance;
+        countFiles = countRSDBFiles(); // chaque fois que le DiskManager est instancié, on compte le nombre de fichiers rsdb sinon on ne sait pas où on en est
+        LoadState(); //chaque fois que le DiskManager est instancié, on charge l'état des pages libres sinon on ne sait pas où on en est
     }
 
-    /// méthode pour créer un jsonfile vide dans le dossier files
+    /// methode pour compter le nombre de fichiers rsdb
+    public static int countRSDBFiles() {
+        File file = new File("./BinData");
+        File[] files = file.listFiles();
+        int count = 0;
+        for (File f : files) {
+            if (f.getName().matches("F[0-9]+.rsdb")) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /// méthode pour créer un file vide dans le dossier files
     public static File createEmptyFile() {
         String path = "./BinData" + "/F" + countFiles+".rsdb";
         // Créer une instance File avec le chemin spécifié
@@ -36,15 +46,15 @@ public class DiskManager {
                 if (file.createNewFile()) {
                     System.out.println("Fichier binaire vide a été créé à : " + path);
                     countFiles++;
-                } else {
-                    System.out.println("Le fichier existe déjà à : " + path);
                 }
-
 
             } catch (IOException e) {
                 System.out.println("Erreur lors de la création du fichiers.");
                 e.printStackTrace();
             }
+        } else {
+            System.out.println("Le fichier existe déjà à : " + path);
+            countFiles++;
         }
         return file;
     }
@@ -63,8 +73,8 @@ public class DiskManager {
             createEmptyFile();
             return new PageId(countFiles -1, 0);
         } else {
-            int idPage = (int) currentFile.length()/ dbConfiginstance.getPagesize()+1;
-            return new PageId(countFiles, idPage);
+            int idPage = ((int) Math.ceil((double) currentFile.length() / dbConfiginstance.getPagesize()));
+            return new PageId(countFiles-1, idPage);
         }
     }
     //Methode pour liberer une page
@@ -102,45 +112,44 @@ public class DiskManager {
         }
 
     }
+    //Methode pour retourner les pages libres
     public Stack<PageId> getFreePages() {
         return freePages;
     }
+    //Methode pour ecrire une page
     public void WritePage(PageId p , ByteBuffer buff){
         try{
-            String path = "./BinData/"+"F"+p.getFileIdx()+"rsdb";
-            if(Files.exists(Paths.get(path))){
-                RandomAccessFile file= new RandomAccessFile(path,"rw");
-                file.seek((p.getPageIdx()+1)*this.dbConfiginstance.getPagesize());
-                file.write(buff.array());
-            }else{
-                System.out.println("Le fichier n'existe pas");
-                RandomAccessFile file = new RandomAccessFile(path, "rw");
-                file.setLength(this.dbConfiginstance.getDm_maxfilesize());
-                file.seek(0); // Se déplacer au début du fichier
-                file.write(buff.array());
-            }
+            String path = "./BinData/"+"F"+p.getFileIdx()+".rsdb";
+            FileChannel fileChannel= new RandomAccessFile(path,"rw").getChannel();
+            buff.flip();
+            fileChannel.write(buff,(long) p.getPageIdx() * dbConfiginstance.getPagesize());
+            buff.compact();
+            fileChannel.close();
+
         }catch(IOException e){
             e.printStackTrace();
         }
     }
-    public void ReadPage(PageId p, ByteBuffer buff) {
+    //Methode pour lire une page
+    public int ReadPage(PageId p, ByteBuffer buff) {
         try {
             String path = "./BinData/" + "F" + p.getFileIdx() + ".rsdb";
-
-            // Vérifier si le fichier existe avant de lire
-            if (Files.exists(Paths.get(path))) {
-                RandomAccessFile file = new RandomAccessFile(path, "r");
-                file.seek(p.getPageIdx() * this.dbConfiginstance.getPagesize());
-                byte[] pageData = new byte[this.dbConfiginstance.getPagesize()]; // Création d'un tableau de bytes pour lire les données
-                file.readFully(pageData); // Lire les données de la page
-                buff.put(pageData); // Remplir le buffer fourni avec les données lues
-                file.close(); // Fermer le fichier après la lecture
-            } else {
-                System.out.println("Le fichier spécifié n'existe pas : " + path);
+            FileChannel fileChannel = new RandomAccessFile(path, "r").getChannel();
+            long pageOffset = p.getPageIdx() * dbConfiginstance.getPagesize();
+            fileChannel.position(pageOffset);
+            int bytesRead = fileChannel.read(buff);
+            if (bytesRead == -1) {
+                throw new IOException("The page is empty");
             }
+            fileChannel.close();
+            return bytesRead;
         } catch (IOException e) {
             e.printStackTrace();
+            return -1;
         }
     }
-}
+    }
+
+
+
 
