@@ -1,34 +1,44 @@
 package org.example;
 
+import java.nio.ByteBuffer;
+
 public class Buffer {
     private static PageId pageId;
     private static int pinCount;
     private static boolean dirtyFlag;
+    private static ByteBuffer contenu;
 
     public Buffer(PageId pageId, int pinCount, boolean dirtyFlag) {
-        this.pageId = pageId;
-        this.pinCount = pinCount;
-        this.dirtyFlag = dirtyFlag;
+        Buffer.pageId = pageId;
+        Buffer.pinCount = pinCount;
+        Buffer.dirtyFlag = dirtyFlag;
     }
 
-    public static PageId getPageId() {
+    public void setContenu(ByteBuffer contenu) {
+        Buffer.contenu = contenu;
+    }
+
+    public  PageId getPageId() {
         return pageId;
     }
 
-    public static int getPinCount() {
+    public  int getPinCount() {
         return pinCount;
     }
 
-    public static boolean getDirtyFlag() {
+    public  boolean getDirtyFlag() {
         return dirtyFlag;
     }
 
-    public static void setPinCount(int pinCount) {
+    public  void setPinCount(int pinCount) {
         Buffer.pinCount = pinCount;
     }
 
-    public static void setDirtyFlag(boolean dirtyFlag) {
+    public  void setDirtyFlag(boolean dirtyFlag) {
         Buffer.dirtyFlag = dirtyFlag;
+    }
+    public  ByteBuffer getContenu() {
+        return contenu;
     }
 
 }
