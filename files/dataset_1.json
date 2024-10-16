@@ -1,5 +1,7 @@
 {
-  "dbpath": "/Users/phuongnhichau/PROJET_BDDA_alpha/BinData",
-  "pagesize": 4096,
-  "dm_maxfilesize": 10485760
+  "dbpath": "./BinData",
+  "pagesize": 4,
+  "dm_maxfilesize": 16,
+  "bm_buffercount": 100,
+  "bm_policy": "LRU"
 }
