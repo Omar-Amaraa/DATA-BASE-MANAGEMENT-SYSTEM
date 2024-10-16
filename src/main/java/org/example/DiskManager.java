@@ -139,7 +139,7 @@ public class DiskManager {
             fileChannel.position(pageOffset);
             int bytesRead = fileChannel.read(buff);
             if (bytesRead == -1) {
-                throw new IOException("The page is empty");
+                throw new IOException("La page est vide");
             }
             fileChannel.close();
             return bytesRead;
@@ -148,7 +148,7 @@ public class DiskManager {
             return -1;
         }
     }
-    }
+}
 
 
 

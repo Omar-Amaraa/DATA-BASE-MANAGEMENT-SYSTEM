@@ -3,19 +3,19 @@ package org.example;
 import java.nio.ByteBuffer;
 
 public class Buffer {
-    private static PageId pageId;
-    private static int pinCount;
-    private static boolean dirtyFlag;
-    private static ByteBuffer contenu;
+    private PageId pageId;
+    private int pinCount;
+    private boolean dirtyFlag;
+    private ByteBuffer contenu;
 
     public Buffer(PageId pageId, int pinCount, boolean dirtyFlag) {
-        Buffer.pageId = pageId;
-        Buffer.pinCount = pinCount;
-        Buffer.dirtyFlag = dirtyFlag;
+        this.pageId = pageId;
+        this.pinCount = pinCount;
+        this.dirtyFlag = dirtyFlag;
     }
 
     public void setContenu(ByteBuffer contenu) {
-        Buffer.contenu = contenu;
+        this.contenu = contenu;
     }
 
     public  PageId getPageId() {
@@ -31,14 +31,13 @@ public class Buffer {
     }
 
     public  void setPinCount(int pinCount) {
-        Buffer.pinCount = pinCount;
+        this.pinCount = pinCount;
     }
 
     public  void setDirtyFlag(boolean dirtyFlag) {
-        Buffer.dirtyFlag = dirtyFlag;
+        this.dirtyFlag = dirtyFlag;
     }
     public  ByteBuffer getContenu() {
         return contenu;
     }
-
 }
