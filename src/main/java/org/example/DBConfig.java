@@ -38,6 +38,10 @@ public class DBConfig {
         return bm_policy;
     }
 
+    public void setBm_policy(String bm_policy) {
+        this.bm_policy = bm_policy;
+    }
+
     public static DBConfig LoadDBConfig(String fichier_config) {
         JSONParser jsonParser = new JSONParser();
         try (FileReader reader = new FileReader(fichier_config)) {
@@ -57,6 +61,8 @@ public class DBConfig {
             e.printStackTrace();
             throw new IllegalArgumentException("Error reading configuration file", e);
         }
+
+
     }
 }
 
