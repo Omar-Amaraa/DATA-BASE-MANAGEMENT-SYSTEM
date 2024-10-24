@@ -59,6 +59,7 @@ public class BufferManager {
                 }
             }
         }
+        
         // Si la page n'est pas dans le buffer, on la charge depuis le disque avec methode readPage
         ByteBuffer contenu = ByteBuffer.allocate(dbConfiginstance.getPagesize());
         diskManager.ReadPage(pageId, contenu);
@@ -81,6 +82,40 @@ public class BufferManager {
 
         return buffer;
 
+    }
+    // Libère une page, décrémente le pin_count et met à jour le flag dirty
+    public void FreePage(PageId pageId, boolean valdirty) {
+        for (Buffer buffer : bufferPool) {
+            // On recherche le buffer correspondant au PageId fourni
+            if (buffer.getPageId().equals(pageId)) {
+                // Si le pin_count est supérieur à 0, on le décrémente
+                if (buffer.getPinCount() > 0) {
+                    buffer.setPinCount(buffer.getPinCount() - 1);
+                }
+
+                // On met à jour le flag dirty si nécessaire (je suis pas sur de cette partie)
+                if (valdirty) {
+                    buffer.setDirtyFlag(true);
+                }
+
+                // Mettre à jour la politique de remplacement
+                // Si la politique est LRU, on place la page à la fin de la LRU queue (car elle vient d'être libérée)
+                if (dbConfiginstance.getBm_policy().equals("LRU")) {
+                    // On retire d'abord la page de la queue si elle y est déjà
+                    lruQueue.remove(pageId);
+                    // Puis on l'ajoute à la fin de la queue
+                    lruQueue.addFirst(pageId);
+                }
+                // Si la politique est MRU, on place la page au début de la MRU queue
+                else if (dbConfiginstance.getBm_policy().equals("MRU")) {
+                    // On retire d'abord la page de la queue si elle y est déjà
+                    mruQueue.remove(pageId);
+                    // Puis on l'ajoute au début de la queue
+                    mruQueue.addLast(pageId);
+                }
+                break;
+            }
+        }
     }
     public void setCurrentReplacementPolicy(String policy){ {
         if(policy.equals(dbConfiginstance.getBm_policy())){
