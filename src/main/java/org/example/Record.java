@@ -1,23 +1,29 @@
 package org.example;
 
-import org.javatuples.Pair;
-
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class Record {
-    List<Object> ListofValues  ;
+    private List<Object> valeurs;
 
-    public Record(List<Object> listofValues) {
-        ListofValues = new ArrayList<Object>();
+    public Record() {
+        this.valeurs = new ArrayList<>();
     }
 
-    public List<Object> getListofValues() {
-        return ListofValues;
+    public Record(List<Object> valeurs) {
+        this.valeurs = valeurs;
     }
 
-    public void setListofValues(List<Object> listofValues) {
-        ListofValues = listofValues;
+    public List<Object> getValeurs() {
+        return valeurs;
+    }
+
+    public void setValeurs(List<Object> valeurs) {
+        this.valeurs = valeurs;
+    }
+
+    public void ajouterValeur(Object valeur) {
+        valeurs.add(valeur);
     }
 }
+
