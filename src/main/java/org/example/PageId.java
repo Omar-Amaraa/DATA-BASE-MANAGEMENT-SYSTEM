@@ -1,9 +1,10 @@
 package org.example;
+import java.io.Serializable;
 
-public class PageId {
-    private int fileIdx;  // Index du fichier
-    private int pageNumber;  // Numéro de la page dans le fichier
+public class PageId  implements Serializable {
+    private static final long serialVersionUID = 1L;
 
+    private int fileIdx;
     private int pageIdx;
 
     public PageId(int fileIdx, int pageIdx) {
@@ -11,7 +12,6 @@ public class PageId {
         this.pageIdx = pageIdx;
     }
 
-    // Getters
     public int getFileIdx() {
         return fileIdx;
     }
@@ -19,12 +19,11 @@ public class PageId {
         return pageIdx;
     }
 
-    public int getPageNumber() {
-        return pageNumber;
-    }
-
     @Override
     public String toString() {
-        return "PageId{fileIdx=" + fileIdx + ", pageNumber=" + pageNumber + "}";
+        return "PageId{" +
+                "fileIdx=" + fileIdx +
+                ", pageIdx=" + pageIdx +
+                '}';
     }
 }

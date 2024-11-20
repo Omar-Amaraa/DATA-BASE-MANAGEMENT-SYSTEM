@@ -61,6 +61,8 @@ public class DBConfig {
             e.printStackTrace();
             throw new IllegalArgumentException("Error reading configuration file", e);
         }
+
+
     }
 }
 
