@@ -10,11 +10,20 @@ public class Relation {
     private  String nomrelation;
     private  int nbcolonnes;
     private  List<ColInfo> colonnes;
+    private DiskManager diskManager;
+    private BufferManager bufferManager;
+    private HeaderPage headerPageTable;
 
-    public Relation(String n,int nbcolonnes) {
+
+    public Relation(String n,int nbcolonnes,int indexFichierRelation,DiskManager diskManager,BufferManager bufferManager) {
+
         this.nomrelation=n;
         this.nbcolonnes=nbcolonnes;
         colonnes = new ArrayList<>();
+        this.diskManager=diskManager;
+        this.bufferManager=bufferManager;
+        headerPageTable=new HeaderPage(indexFichierRelation);
+
     }
 
     public  String getNomrelation() {
@@ -40,6 +49,7 @@ public class Relation {
     public void ajouterColonne(ColInfo colInfo) {
         colonnes.add(colInfo);
     }
+
     public int writeRecordToBuffer(Record record, ByteBuffer buffer, int pos) {
         int initialPos = pos;
 
@@ -114,5 +124,41 @@ public class Relation {
 
         return pos - initialPos; // Taille totale lue
     }
+
+    /**
+     * Methode pour créer une dataPage
+     *
+     */
+    public void addDataPage(){
+        //allouer une nouvelle page via AllocPage du DiskManager
+        PageId newPageVide =diskManager.AllocPage();
+        //actualiser le Page Directory en prenant en compte cette page
+        headerPageTable.addPageToPageDirectory(newPageVide);
+        //affichage
+        System.out.println("Added a new data page at:\nPageIndex: "+ newPageVide.getPageIdx()+"\nFileIndex:"+newPageVide.getFileIdx() );
+
+    }
+    public PageId getFreeDataPageId(int sizeRecord){
+        int normalPageSize = diskManager.getDbConfiginstance().getPagesize();//taille normale
+        int UsablePageSize = normalPageSize-((8*PageId.getNbSlot())+8);//taille disponible pour ecrire les records apres avoir enlevé, l'espace
+        //nécéssaire pour mettre la metaData(debut fin + nb d'entrées slot dir, pos début espace dispo)
+        for (PageId p : headerPageTable.getPageDirectory()){//grace au header page on peut parcourir la liste des pages ( PageId) dans le
+            //fichier contenant la relation (table Etudiant par exemple)
+            int freeSpace = 0;// on compte maintenant l'espace disponible
+            for (int i : p.getBitMap()){
+                if (i ==0){//grace a la bitmap, on peut trouver les slots qui sont vides (leurs bit sont remis à 0) donc on va additionner leurs tailles
+                    //pour savoir la taille exacte de l'espace disponible dans notre page
+                    freeSpace+=UsablePageSize/PageId.getNbSlot();
+                }
+            }//si on l'espace est suffisant, on retourne p le PageId de la page où on a trouvé assez d'espace.
+            if(freeSpace>= sizeRecord) {
+                return p;
+            }
+
+        }//null sinon
+        return null;
+    }
+
+
 }
 

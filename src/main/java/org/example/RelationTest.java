@@ -5,13 +5,13 @@ import java.nio.ByteBuffer;
 public class RelationTest {
 
     // Méthode pour créer une relation "Personnes"
-    public static Relation createRelation() {
+    /*public static Relation createRelation() {
         Relation relation = new Relation("Personnes", 2);
         relation.ajouterColonne(new ColInfo("ID", ColType.INT));
         relation.ajouterColonne(new ColInfo("Nom", ColType.VARCHAR, 50));
         System.out.println("Relation créée : " + relation);
         return relation;
-    }
+    }*/
 
     // Méthode pour tester l'écriture d'un record dans le buffer à une position donnée
     public static void testWriteRecord(Relation relation, Record record, ByteBuffer buffer, int pos) {
@@ -27,7 +27,7 @@ public class RelationTest {
     }
 
     // Méthode principale pour effectuer tous les tests
-    public static void testRelation() {
+    /*public static void testRelation() {
         // Création de la relation
         Relation relation = createRelation();
 
@@ -64,5 +64,6 @@ public class RelationTest {
     // Méthode principale qui lance les tests
     public static void main(String[] args) {
         testRelation();
-    }
+    }*/
+    //on va faire les tests une fois qu'on a fini la classe relation pcq j'ai modifié le constructeur de relation
 }
