@@ -8,18 +8,22 @@ import java.util.*;
 
 public class DiskManager {
 
-    private static DBConfig dbConfiginstance;
-    private static Stack<PageId> freePages = new Stack<>(); // plus pratique avec les Piles comme on va de toutes facons utiliser le dernier element
+
+
+    private  DBConfig dbConfiginstance;
+    private  Stack<PageId> freePages = new Stack<>(); // plus pratique avec les Piles comme on va de toutes facons utiliser le dernier element
     //comme ca on peut utiliser les fonctions prédéfinies de la Classe Stack isEmpty() et pop()
     private static int countFiles = 0;
 
     /// constructeur
     public DiskManager(DBConfig dbConfiginstance) {
-        DiskManager.dbConfiginstance = dbConfiginstance;
+        this.dbConfiginstance = dbConfiginstance;
         countFiles = countRSDBFiles(); // chaque fois que le DiskManager est instancié, on compte le nombre de fichiers rsdb sinon on ne sait pas où on en est
         LoadState(); //chaque fois que le DiskManager est instancié, on charge l'état des pages libres sinon on ne sait pas où on en est
     }
-
+    public DBConfig getDbConfiginstance() {
+        return dbConfiginstance;
+    }
     /// methode pour compter le nombre de fichiers rsdb
     public static int countRSDBFiles() {
         File file = new File("./BinData");
@@ -60,7 +64,7 @@ public class DiskManager {
     }
 
     /// verifie s'il n'y a plus de place et cree un fichier
-    public PageId AllocPage() {
+    public  PageId AllocPage() {
         if (!freePages.isEmpty()) {
             return freePages.pop();
         }
@@ -135,11 +139,11 @@ public class DiskManager {
         try {
             String path = "./BinData/" + "F" + p.getFileIdx() + ".rsdb";
             FileChannel fileChannel = new RandomAccessFile(path, "r").getChannel();
-            long pageOffset = p.getPageIdx() * dbConfiginstance.getPagesize();
+            long pageOffset = (long) p.getPageIdx() * dbConfiginstance.getPagesize();
             fileChannel.position(pageOffset);
             int bytesRead = fileChannel.read(buff);
             if (bytesRead == -1) {
-                throw new IOException("The page is empty");
+                throw new IOException("La page est vide");
             }
             fileChannel.close();
             return bytesRead;
@@ -148,7 +152,7 @@ public class DiskManager {
             return -1;
         }
     }
-    }
+}
 
 
 

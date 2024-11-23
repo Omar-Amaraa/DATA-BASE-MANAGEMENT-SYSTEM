@@ -9,35 +9,35 @@ public class DiskManagerTests {
 
     public static PageId TestAllocPage(DiskManager dm) {
         PageId pageId = dm.AllocPage();
-        System.out.println("Allocated Page: " + pageId);
+        System.out.println("AllocPage: " + pageId);
         return pageId;
     }
 
     public static void TestDeallocPage(PageId pageId, DiskManager dm) {
 
         dm.DeallocPage(pageId);
-        System.out.println("Deallocated Page: " + pageId);
+        System.out.println("DeallocPage: " + pageId);
     }
 
     public static void TestSaveState(DiskManager dm) {
         dm.SaveState();
-        System.out.println("State saved.");
+        System.out.println("SaveState.");
     }
     public static void TestWritePage(PageId pageId, ByteBuffer buffer, DiskManager dm) {
         dm.WritePage(pageId, buffer);
-        System.out.println("Page written: " + pageId);
+        System.out.println("Write Page: " + pageId);
     }
 
     public static void TestReadPage(PageId pageId, ByteBuffer buffer, DiskManager dm) {
         buffer.clear();
         int bytesRead = dm.ReadPage(pageId, buffer);
         if (bytesRead > 0) {
-            System.out.println("Page read: " + pageId);
-            System.out.println("Buffer limit: " + buffer.limit());
-            System.out.println("Buffer capacity: " + buffer.capacity());
-            System.out.println("Buffer position: " + buffer.position());
-        } else {
-            System.out.println("Failed to read page: " + pageId);
+//            System.out.println("Page read: " + pageId);
+//            System.out.println("Buffer limit: " + buffer.limit());
+//            System.out.println("Buffer capacity: " + buffer.capacity());
+//            System.out.println("Buffer position: " + buffer.position());
+       } else {
+            System.out.println("La page ne peut pas être lu: " + pageId);
         }
     }
 
@@ -46,7 +46,7 @@ public class DiskManagerTests {
 
         // Charge et affiche l'état
         dm.LoadState();
-        System.out.println("State loaded. Free pages: " + dm.getFreePages());
+        System.out.println("LoadSate. Free pages: " + dm.getFreePages());
     }
     public static void main(String[] args) {
         DBConfig config = DBConfig.LoadDBConfig("./files/dataset_1.json");
