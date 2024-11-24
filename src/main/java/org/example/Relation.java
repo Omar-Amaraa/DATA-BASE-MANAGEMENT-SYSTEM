@@ -142,7 +142,8 @@ public class Relation {
         int normalPageSize = diskManager.getDbConfiginstance().getPagesize();//taille normale
         int UsablePageSize = normalPageSize-((8*PageId.getNbSlot())+8);//taille disponible pour ecrire les records apres avoir enlevé, l'espace
         //nécéssaire pour mettre la metaData(debut fin + nb d'entrées slot dir, pos début espace dispo)
-        for (PageId p : headerPageTable.getPageDirectory()){//grace au header page on peut parcourir la liste des pages ( PageId) dans le
+        for (PageId p : headerPageTable.getPageDirectory()){
+            //grace au header page on peut parcourir la liste des pages ( PageId) dans le
             //fichier contenant la relation (table Etudiant par exemple)
             int freeSpace = 0;// on compte maintenant l'espace disponible
             for (int i : p.getBitMap()){
@@ -157,6 +158,38 @@ public class Relation {
 
         }//null sinon
         return null;
+    }
+    public RecordId writeRecordToDataPage(Record record , PageId pageId){
+        Buffer buffer = bufferManager.getPage(pageId);
+        ByteBuffer content = buffer.getContenu();
+        DataPage dataPage = new DataPage(pageId.getFileIdx(), pageId.getPageIdx(), content.capacity());
+
+        int slotIdx = -1;
+        //chercher un slot qui est vide a l'aide du tableau dans dataPage
+        for (int i =0; i <PageId.getNbSlot(); i++) {
+            if (dataPage.isSlotFree(slotIdx)) {
+                slotIdx = i;
+            }
+        }
+        if (slotIdx == -1) throw new RuntimeException("no free slots available");
+
+        int position = dataPage.getFreeSpacePointer();// on a besoin de savoir la position
+        //où commence l'espace vide dans la page pour que , après qu'on ait écrit le record,
+        //on place le pointeur a la position qu'on avait + la taille du record écrit, comme ça
+        //on va éviter que des données soient overWritten ( jsp comment le dire en francais :D).
+
+        int tailleDurecord=writeRecordToBuffer(record, content, position );//on écrit le contenu du record,
+        //dans la position vide dans la page (position) et on stocke
+        // la taille du record écrit retournée(par writeRecordToBuffer()) dans (tailleDurecord).
+
+        dataPage.addRecord(slotIdx, position, tailleDurecord);
+        //maintenant on modifie le tableau qui contient la position et la taille de chaque slot dans la page
+
+
+        buffer.setDirtyFlag(true);
+
+        // Return the RecordId ( avec la page dans laquelle il est écrit et l'index de son slot)
+        return new RecordId(pageId, slotIdx);
     }
 
 
