@@ -25,5 +25,7 @@ public class Record {
     public void ajouterValeur(Object valeur) {
         valeurs.add(valeur);
     }
+
+
 }
 

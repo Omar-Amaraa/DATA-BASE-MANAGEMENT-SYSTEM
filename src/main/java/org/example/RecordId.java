@@ -1,19 +1,27 @@
 package org.example;
 
 public class RecordId {
-    private PageId pageDuRecord;
+    private PageId pageId;
     private int slotIdx;
 
-    public RecordId(PageId pageDuRecord, int slotIdx) {
-        this.pageDuRecord = pageDuRecord;
+    public RecordId(PageId pageId, int slotIdx) {
+        this.pageId = pageId;
         this.slotIdx = slotIdx;
     }
 
-    public PageId getPageDuRecord() {
-        return pageDuRecord;
+    public PageId getPageId() {
+        return pageId;
     }
 
     public int getSlotIdx() {
         return slotIdx;
+    }
+
+    public void setPageId(PageId pageId) {
+        this.pageId = pageId;
+    }
+
+    public void setSlotIdx(int slotIdx) {
+        this.slotIdx = slotIdx;
     }
 }

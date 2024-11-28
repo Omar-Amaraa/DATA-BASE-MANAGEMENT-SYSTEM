@@ -1,7 +1,7 @@
 {
   "dbpath": "./BinData",
   "pagesize": 1024,
-  "dm_maxfilesize": 4096,
-  "bm_buffercount": 2,
+  "dm_maxfilesize": 102400,
+  "bm_buffercount": 10,
   "bm_policy": "LRU"
 }

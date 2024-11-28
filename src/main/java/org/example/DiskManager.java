@@ -51,7 +51,6 @@ public class DiskManager {
                     System.out.println("Fichier binaire vide a été créé à : " + path);
                     countFiles++;
                 }
-
             } catch (IOException e) {
                 System.out.println("Erreur lors de la création du fichiers.");
                 e.printStackTrace();
@@ -135,7 +134,7 @@ public class DiskManager {
         }
     }
     //Methode pour lire une page
-    public int ReadPage(PageId p, ByteBuffer buff) {
+    public int ReadPage(PageId p, ByteBuffer buff) {//buff doit etre la taille d'une page
         try {
             String path = "./BinData/" + "F" + p.getFileIdx() + ".rsdb";
             FileChannel fileChannel = new RandomAccessFile(path, "r").getChannel();
@@ -143,7 +142,8 @@ public class DiskManager {
             fileChannel.position(pageOffset);
             int bytesRead = fileChannel.read(buff);
             if (bytesRead == -1) {
-                throw new IOException("La page est vide");
+                System.out.println("La page est vide");
+                return 0;
             }
             fileChannel.close();
             return bytesRead;
