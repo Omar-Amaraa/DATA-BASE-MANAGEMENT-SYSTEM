@@ -7,10 +7,12 @@ public class PageId  implements Serializable {
 
     private int fileIdx;
     private int pageIdx;
+    private DBConfig dbConfig;
 
     public PageId(int fileIdx, int pageIdx) {
         this.fileIdx = fileIdx;
         this.pageIdx = pageIdx;
+        dbConfig = DBConfig.LoadDBConfig("./files/dataset_1.json");
     }
 
     public int getFileIdx() {
@@ -38,4 +40,9 @@ public class PageId  implements Serializable {
                 ", pageIdx=" + pageIdx +
                 '}';
     }
+    public int size() {
+        return dbConfig.getPagesize();
+    }
+    
+    
 }

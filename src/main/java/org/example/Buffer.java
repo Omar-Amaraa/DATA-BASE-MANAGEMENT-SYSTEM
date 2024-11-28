@@ -12,6 +12,7 @@ public class Buffer {
         this.pageId = pageId;
         this.pinCount = pinCount;
         this.dirtyFlag = dirtyFlag;
+        contenu = ByteBuffer.allocate(pageId.size());
     }
 
     public void setContenu(ByteBuffer contenu) {
@@ -38,6 +39,15 @@ public class Buffer {
         this.dirtyFlag = dirtyFlag;
     }
     public  ByteBuffer getContenu() {
+        if (contenu == null) {
+            contenu = ByteBuffer.allocate(pageId.size());
+            
+        }
         return contenu;
     }
+    public void setContenu(ByteBuffer buff, int offset) {
+        contenu.position(offset);
+        contenu.put(buff);
+    }
+        
 }
