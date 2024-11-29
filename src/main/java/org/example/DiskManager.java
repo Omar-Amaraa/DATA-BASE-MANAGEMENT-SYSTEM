@@ -65,14 +65,32 @@ public class DiskManager {
         }
         if (countFiles == 0) {
             createEmptyFile();
+            try (RandomAccessFile raf = new RandomAccessFile("./BinData/F" + (countFiles - 1) + ".rsdb","rw" )) {
+                raf.setLength(dbConfiginstance.getPagesize());
+                raf.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return new PageId(countFiles-1 , 0);
         }
         File currentFile = new File("./BinData" + "/F" + (countFiles-1) + ".rsdb");
         if (!currentFile.exists() || currentFile.length() >= dbConfiginstance.getDm_maxfilesize()) {
             createEmptyFile();
+            try (RandomAccessFile raf = new RandomAccessFile("./BinData/F" + (countFiles - 1) + ".rsdb","rw" )) {
+                raf.setLength(dbConfiginstance.getPagesize());
+                raf.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return new PageId(countFiles -1, 0);
         } else {
-            int idPage = ((int) Math.ceil((double) currentFile.length() / dbConfiginstance.getPagesize()));
+            int idPage = ((int) Math.ceil(currentFile.length() / dbConfiginstance.getPagesize()));
+            try (RandomAccessFile raf = new RandomAccessFile("./BinData/F" + (countFiles - 1) + ".rsdb","rw" )) {
+                raf.setLength(dbConfiginstance.getPagesize() * (idPage + 1));
+                raf.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return new PageId(countFiles-1, idPage);
         }
     }
@@ -103,7 +121,7 @@ public class DiskManager {
                 freePages = (Stack<PageId>) ois.readObject();
                 ois.close();
                 System.out.println("State est charge de " + saveFile.getAbsolutePath());
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException | ClassCastException  e) {
                 e.printStackTrace();
             }
         } else {
@@ -119,12 +137,12 @@ public class DiskManager {
     public void WritePage(PageId p , ByteBuffer buff){
         try{
             String path = "./BinData/"+"F"+p.getFileIdx()+".rsdb";
-            FileChannel fileChannel= new RandomAccessFile(path,"rw").getChannel();
-            buff.flip();
-            fileChannel.write(buff,(long) p.getPageIdx() * dbConfiginstance.getPagesize());
-            buff.compact();
+            RandomAccessFile raf = new RandomAccessFile(path,"rw");
+            FileChannel fileChannel= raf.getChannel();
+            buff.rewind();
+            fileChannel.write(buff, p.getPageIdx() * dbConfiginstance.getPagesize());
             fileChannel.close();
-
+            raf.close();
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -133,15 +151,18 @@ public class DiskManager {
     public int ReadPage(PageId p, ByteBuffer buff) {//buff doit etre la taille d'une page
         try {
             String path = "./BinData/" + "F" + p.getFileIdx() + ".rsdb";
-            FileChannel fileChannel = new RandomAccessFile(path, "r").getChannel();
+            RandomAccessFile raf = new RandomAccessFile(path, "r");
+            FileChannel fileChannel = raf.getChannel();
             long pageOffset = p.getPageIdx() * dbConfiginstance.getPagesize();
             fileChannel.position(pageOffset);
+            buff.rewind();
             int bytesRead = fileChannel.read(buff);
+            fileChannel.close();
+            raf.close();
             if (bytesRead == -1) {
                 System.out.println("La page est vide");
                 return 0;
             }
-            fileChannel.close();
             return bytesRead;
         } catch (IOException e) {
             e.printStackTrace();
