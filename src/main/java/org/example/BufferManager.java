@@ -5,80 +5,106 @@ import java.util.*;
 public class BufferManager {
     private static DBConfig dbConfiginstance;
     private static DiskManager diskManager;
-    private static List<Buffer> bufferPool = new LinkedList();
-    private Deque<PageId> lruQueue;
-    private Deque<PageId> mruQueue;
+    private static  List<Buffer> bufferPool = new LinkedList<>();
 
     public BufferManager(DBConfig dbConfiginstance, DiskManager diskManager) {
         BufferManager.dbConfiginstance = dbConfiginstance;
         BufferManager.diskManager = diskManager;
-        this.lruQueue = new LinkedList<>();
-        this.mruQueue = new LinkedList<>();
     }
+
     // Fonction pour obtenir une page depuis le buffer
-
-
     public Buffer getPage(PageId pageId) {
-
+        Buffer retbuffer = null;
         // Si la page est deja dans le buffer, on la retourne
         for (Buffer i : bufferPool) {
-            // Si la taille du buffer est atteinte, on doit remplacer une page
-
-            if (bufferPool.size() >= dbConfiginstance.getBm_buffercount()) {
-                PageId pageIdToReplace;
-                if (dbConfiginstance.getBm_policy().equals("LRU")) {
-                    pageIdToReplace = lruQueue.removeLast();
-                } else {
-                    pageIdToReplace = mruQueue.removeFirst();
-                }
-                if (pageIdToReplace.equals(i.getPageId())) {
-                    if (i.getDirtyFlag()) {
-                        // todo: Re-Ecrire la page sur le disque avec methode writePage
-                    }
-
-                }
-            else if (pageId.equals(i.getPageId())) {
-
-                    i.setPinCount(i.getPinCount() + 1);
-                    //a faire: mis a jour la politique de remplacement
-
-                    return i;
-                }
-            }
-            else {
-
-                // Si la page n'est pas dans le buffer, on la charge depuis le disque avec methode readPage
-                Buffer buffer = new Buffer(pageId, 1, false);
-                bufferPool.add(buffer);
-                //a faire: mis a jour la politique de remplacement;
-                return buffer;
+            if ((i.getPageId().equals(pageId))) {
+                retbuffer = i;
+                break;
             }
         }
-        return null;
+        if (retbuffer != null) {// Si la page est dans le buffer, on la met à jour dans la queue MRU -> LRU
+            retbuffer.setPinCount(retbuffer.getPinCount() + 1);
+            bufferPool.remove(retbuffer);
+            bufferPool.addFirst(retbuffer);
+            System.out.println("La page est dans le buffer et mise à jour dans la queue MRU -> LRU\n");
+            System.out.println("Queue: "+bufferPool.toString());
+            return retbuffer;
+        }
+
+        // Si la page n'est pas dans le buffer, on la charge depuis le disque avec methode readPage
+        retbuffer = new Buffer(pageId, 1, false);
+        diskManager.ReadPage(pageId, retbuffer.getContenu());
+        bufferPool.addFirst(retbuffer);
+        System.out.println("La page" + retbuffer.getPageId().toString() + "est chargée dans pool depuis le disque\n");
+        System.out.println("La page" + pageId.toString() + "est ajoutée dans la queue MRU -> LRU\n");
+        System.out.println("Queue: " + bufferPool.toString());
+
+        // Si la taille du buffer est atteinte, on doit remplacer une page
+        if (bufferPool.size() >= dbConfiginstance.getBm_buffercount()) {
+            Buffer removedBuffer = null;
+            if (dbConfiginstance.getBm_policy().equals("LRU")) {
+                removedBuffer = bufferPool.removeLast();
+                System.out.println("Buffer est plein et on doit remplacer la page"+removedBuffer.getPageId().getPageIdx() +"avec la politique LRU\n");
+                System.out.println("Queue: " + bufferPool.toString());
+            } else {
+                removedBuffer = bufferPool.removeFirst();
+                System.out.println("Buffer est plein et on doit remplacer la page"+removedBuffer.getPageId().getPageIdx() +"avec la politique LRU\n");
+                System.out.println("Queue: " + bufferPool.toString());
+            }
+        }
+        return retbuffer;
 
     }
+    // Libère une page, décrémente le pin_count et met à jour le flag dirty
+    public void FreePage(PageId pageId, boolean valdirty) {
+        Buffer buffer_iter = null;
+        Buffer freedbuffer = null;
+        for (int i = 0; i < bufferPool.size(); i++) {
+            buffer_iter = bufferPool.get(i);
+            // On recherche le buffer correspondant au PageId fourni
+            if (buffer_iter.getPageId().equals(pageId)) {
+                // Si le pin_count est supérieur à 0, on le décrémente
+                if (buffer_iter.getPinCount() > 0) {
+                    buffer_iter.setPinCount(buffer_iter.getPinCount() - 1);
+                }
 
-    public void setCurrentReplacementPolicy() {
-        try {
-            Scanner myObj = new Scanner(System.in);  // Create a Scanner object
-            System.out.println("Entrez la politique de remplacement MRU/LRU");
-            String politique = myObj.nextLine();
-            dbConfiginstance.setBm_policy(politique);
-        } catch (Exception e) {
-            e.printStackTrace();
+                // On met à jour le flag dirty si nécessaire (je suis pas sur de cette partie)
+                if (valdirty) {
+                    buffer_iter.setDirtyFlag(valdirty);
+                }
+                freedbuffer = buffer_iter;
+                break;
+            }
+        }
+        bufferPool.remove(freedbuffer);
+        for (int i = 0; i < bufferPool.size(); i++) {
+            buffer_iter = bufferPool.get(i);
+            if (buffer_iter.getPinCount()<=freedbuffer.getPinCount()){
+                bufferPool.add(i,freedbuffer);
+                break;
+            }
         }
     }
-
+    public void setCurrentReplacementPolicy(String policy){ 
+        if(policy.equals(dbConfiginstance.getBm_policy())){
+            System.out.println("La politique de remplacement est déjà "+policy);
+        } else {
+            dbConfiginstance.setBm_policy(policy);
+        }
+    }
     public void FlushBuffers() {
         for (Buffer buffer : bufferPool) {
             if (buffer.getDirtyFlag()) {
                 diskManager.WritePage(buffer.getPageId(), buffer.getContenu());
             }
-            buffer.setDirtyFlag(false);
-            buffer.setPinCount(0);
-            buffer.setContenu(null);
         }
+        bufferPool.clear();
     }
-
+    public void getBufferpool(){
+        for(Buffer i: bufferPool){
+            System.out.println(i.getPageId().toString());
+        }
+        System.out.println("BufferPool size: "+bufferPool.size());
+    }
 
 }
