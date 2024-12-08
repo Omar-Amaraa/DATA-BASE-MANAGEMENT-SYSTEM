@@ -1,12 +1,14 @@
 package org.example;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Serializable;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.FileReader;
-import java.io.IOException;
-
-public class DBConfig {
+public class DBConfig implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String dbpath;
     private int pagesize;
     private int dm_maxfilesize;
@@ -19,6 +21,14 @@ public class DBConfig {
         this.dm_maxfilesize = dm_maxfilesize;
         this.bm_buffercount = bm_buffercount;
         this.bm_policy = bm_policy;
+    }
+    public DBConfig(String fichier_config) {
+        DBConfig config = LoadDBConfig(fichier_config);
+        this.dbpath = config.getDbpath();
+        this.pagesize = config.getPagesize();
+        this.dm_maxfilesize = config.getDm_maxfilesize();
+        this.bm_buffercount = config.getBm_buffercount();
+        this.bm_policy = config.getBm_policy();
     }
 
     public String getDbpath() {

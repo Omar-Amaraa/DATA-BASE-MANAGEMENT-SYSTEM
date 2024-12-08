@@ -5,9 +5,9 @@ import java.util.Objects;
 public class PageId  implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private int fileIdx;
-    private int pageIdx;
-    private DBConfig dbConfig;
+    private final int fileIdx;
+    private final int pageIdx;
+    private final DBConfig dbConfig;
 
     public PageId(int fileIdx, int pageIdx) {
         this.fileIdx = fileIdx;

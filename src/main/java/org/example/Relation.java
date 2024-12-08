@@ -1,20 +1,20 @@
-
 package org.example;
 
 
-import java.io.*;
+import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.nio.ByteBuffer;
 
 
-public class Relation {
+public class Relation implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String nomrelation;
     private int nbcolonnes;
-    private List<ColInfo> colonnes;
-    private PageId headerPageId;
-    private DiskManager diskManager;
-    private BufferManager bufferManager;
+    private final List<ColInfo> colonnes;
+    private final PageId headerPageId;
+    private final DiskManager diskManager;
+    private final BufferManager bufferManager;
 
     public Relation(String n, int nbcolonnes, DiskManager diskManager, BufferManager bufferManager) {
         this.nomrelation = n;
@@ -28,18 +28,28 @@ public class Relation {
         this.diskManager = diskManager;
         this.bufferManager = bufferManager;
     }
-    
+    public PageId getHeaderPageId() {
+        return headerPageId;
+    }
 
     public String getNomrelation() {
         return nomrelation;
     }
 
-    public int getNbcolonnes() {
+    public int getNbColonnes() {
         return nbcolonnes;
+    }
+
+    public ColInfo getCol(int i) {
+        return colonnes.get(i);
     }
 
     public List<ColInfo> getColonnes() {
         return colonnes;
+    }
+
+    public BufferManager getBufferManager() {
+        return bufferManager;
     }
 
     public void setNomrelation(String nomrelation) {
@@ -54,6 +64,24 @@ public class Relation {
         colonnes.add(colInfo);
     }
 
+    public boolean hasColumn(String nomColonne) {
+        for (ColInfo colInfo : colonnes) {
+            if (colInfo.getNom().equals(nomColonne)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int indexOfColumn(String nomColonne) {
+        for (int i = 0; i < colonnes.size(); i++) {
+            if (colonnes.get(i).getNom().equals(nomColonne)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public int writeRecordToBuffer(Record record, ByteBuffer buffer, int pos) {
         int initialPos = pos;
         buffer.position(pos);
@@ -61,31 +89,31 @@ public class Relation {
             ColInfo colInfo = colonnes.get(i);
             Object valeur = record.getValeurs().get(i);
             switch (colInfo.getType()) {
-                case INT:
+                case INT -> {
                     buffer.putInt(pos, (int) valeur);
                     pos += Integer.BYTES;
-                    break;
-                case REAL:
+                }
+                case REAL -> {
                     buffer.putFloat(pos, (float) valeur);
                     pos += Float.BYTES;
-                    break;
-                case CHAR:
+                }
+                case CHAR -> {
                     String charValue = (String) valeur;
                     for (int j = 0; j < colInfo.getTailleMax(); j++) {
                         char c = j < charValue.length() ? charValue.charAt(j) : '\0';
                         buffer.putChar(pos, c);
                         pos += Character.BYTES;
                     }
-                    break;
-                case VARCHAR:
+                }
+                case VARCHAR -> {
                     String varcharValue = (String) valeur;
-                    buffer.putInt(pos,varcharValue.length());
+                    buffer.putInt(pos, varcharValue.length());
                     pos += Integer.BYTES;
                     for (int j = 0; j < varcharValue.length(); j++) {
                         buffer.putChar(pos, varcharValue.charAt(j));
                         pos += Character.BYTES;
                     }
-                    break;
+                }
             }
         }
         return pos - initialPos; // Taille totale écrite
@@ -96,15 +124,15 @@ public class Relation {
         buffer.position(pos);
         for (ColInfo colInfo : colonnes) {
             switch (colInfo.getType()) {
-                case INT:
+                case INT -> {
                     record.ajouterValeur(buffer.getInt(pos));
                     pos += Integer.BYTES;
-                    break;
-                case REAL:
+                }
+                case REAL -> {
                     record.ajouterValeur(buffer.getFloat(pos));
                     pos += Float.BYTES;
-                    break;
-                case CHAR:
+                }
+                case CHAR -> {
                     StringBuilder charValue = new StringBuilder();
                     for (int i = 0; i < colInfo.getTailleMax(); i++) {
                         char c = buffer.getChar(pos);
@@ -112,8 +140,8 @@ public class Relation {
                         pos += Character.BYTES;
                     }
                     record.ajouterValeur(charValue.toString());
-                    break;
-                case VARCHAR:
+                }
+                case VARCHAR -> {
                     StringBuilder varcharValue = new StringBuilder();
                     int taille = buffer.getInt(pos);
                     pos += Integer.BYTES;
@@ -123,14 +151,15 @@ public class Relation {
                         pos += Character.BYTES;
                     }
                     record.ajouterValeur(varcharValue.toString());
-                    break;
+                }
             }
         }
 
         return pos - initialPos; // Taille totale lue
     }
+    
     // Ajoute une page de données à la relation
-    void addDataPage() {
+    public void addDataPage() {
         PageId nouvPage = diskManager.AllocPage();//Alloue une nouvelle page
         Buffer buffHeaderPage=bufferManager.getPage(headerPageId);//Recupere la page depuis Buffer
         ByteBuffer buff = buffHeaderPage.getContenu();
@@ -155,7 +184,7 @@ public class Relation {
         
     }
 
-    PageId getFreeDataPageId(int sizeRecord){
+    public PageId getFreeDataPageId(int sizeRecord){
         Buffer headerBuffer = bufferManager.getPage(headerPageId);
         ByteBuffer buff = headerBuffer.getContenu();
         buff.position(0);
@@ -173,7 +202,7 @@ public class Relation {
         return null;
     }
 
-    RecordId writeRecordToDataPage(Record record, PageId pageId) {
+    public RecordId writeRecordToDataPage(Record record, PageId pageId) {
         Buffer buffDataPage = bufferManager.getPage(pageId);
         ByteBuffer buff = buffDataPage.getContenu();
         int posDebutLibre = buff.getInt(pageId.size() - 4);// position de début libre pour écrire le record
@@ -197,7 +226,7 @@ public class Relation {
             int pageIdx = buff.getInt();//Recupere le pageIdx de la page
             if(fileIdx == pageId.getFileIdx() && pageIdx == pageId.getPageIdx()){
                 int taillelibre = buff.getInt(4+i*12+8);//Recupere la taille libre de la page
-                buff.putInt(4+i*12+8,taillelibre - sizeRecord);//Met à jour la taille libre de la page
+                buff.putInt(4+i*12+8,taillelibre - sizeRecord - 8);//Met à jour la taille libre de la page
                 buffHeaderPage.setDirtyFlag(true);
                 break;
             }
@@ -209,7 +238,7 @@ public class Relation {
     }
 
 
-    List<Record> getRecordsInDataPage(PageId pageId){
+    public List<Record> getRecordsInDataPage(PageId pageId){
         List<Record> records = new ArrayList<>();
         Buffer buffDataPage = bufferManager.getPage(pageId);
         ByteBuffer buff = buffDataPage.getContenu();
@@ -237,7 +266,7 @@ public class Relation {
         return records;
     }
 
-    List<PageId> getDataPages(){
+    public List<PageId> getDataPages(){
         List<PageId> dataPages = new ArrayList<>();
         Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
         ByteBuffer buff = buffHeaderPage.getContenu();
@@ -252,23 +281,15 @@ public class Relation {
         return dataPages;
     }
 
-    RecordId InsertRecord (Record record)throws FileNotFoundException{
+    public RecordId insertRecord(Record record) {
         int sizeRecord = 0;
         int i = 0;
         for (ColInfo colInfo : colonnes) {
             switch (colInfo.getType()) {
-                case INT:
-                    sizeRecord += Integer.BYTES;
-                    break;
-                case REAL:
-                    sizeRecord += Float.BYTES;
-                    break;
-                case CHAR:
-                    sizeRecord += Character.BYTES * colInfo.getTailleMax();
-                    break;
-                case VARCHAR:
-                    sizeRecord += Character.BYTES * (((String) record.getValeurs().get(i)).length());
-                    break;
+                case INT -> sizeRecord += Integer.BYTES;
+                case REAL -> sizeRecord += Float.BYTES;
+                case CHAR -> sizeRecord += Character.BYTES * colInfo.getTailleMax();
+                case VARCHAR -> sizeRecord += Character.BYTES * (((String) record.getValeurs().get(i)).length());
             }
             i++;
         }
@@ -280,7 +301,7 @@ public class Relation {
         return writeRecordToDataPage(record, pageId);
     }
 
-    List<Record> GetAllRecords(){
+    public List<Record> GetAllRecords(){
         List<Record> records = new ArrayList<>();
         Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
         ByteBuffer buff = buffHeaderPage.getContenu();
@@ -293,6 +314,32 @@ public class Relation {
             records.addAll(getRecordsInDataPage(pageId));
         }
         return records;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            // if the same instance
+            return true;
+        }
+        if (obj instanceof Relation relation){
+            return this.nomrelation.equals(relation.getNomrelation());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(nomrelation);
+        sb.append(",nbcolonnes=").append(nbcolonnes);
+        sb.append(colonnes.toString());
+        return sb.toString();
     }
 
 }

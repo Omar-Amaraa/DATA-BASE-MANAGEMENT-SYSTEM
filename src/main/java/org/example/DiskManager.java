@@ -1,12 +1,19 @@
 package org.example;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.RandomAccessFile;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Stack;
 
-public class DiskManager {
+public class DiskManager implements Serializable {
 
     private static DBConfig dbConfiginstance;
     private static Stack<PageId> freePages = new Stack<>(); // plus pratique avec les Piles comme on va de toutes facons utiliser le dernier element
@@ -19,6 +26,7 @@ public class DiskManager {
         countFiles = countRSDBFiles(); // chaque fois que le DiskManager est instancié, on compte le nombre de fichiers rsdb sinon on ne sait pas où on en est
         LoadState(); //chaque fois que le DiskManager est instancié, on charge l'état des pages libres sinon on ne sait pas où on en est
     }
+
 
     /// methode pour compter le nombre de fichiers rsdb
     public static int countRSDBFiles() {
@@ -48,8 +56,7 @@ public class DiskManager {
                     countFiles++;
                 }
             } catch (IOException e) {
-                System.out.println("Erreur lors de la création du fichiers.");
-                e.printStackTrace();
+                System.out.println("Erreur lors de la création du fichiers."+ e.getMessage());
             }
         } else {
             System.out.println("Le fichier existe déjà à : " + path);
@@ -69,7 +76,7 @@ public class DiskManager {
                 raf.setLength(dbConfiginstance.getPagesize());
                 raf.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error set file F" + (countFiles - 1) + ".rsdb length:" + e.getMessage());
             }
             return new PageId(countFiles-1 , 0);
         }
@@ -80,7 +87,7 @@ public class DiskManager {
                 raf.setLength(dbConfiginstance.getPagesize());
                 raf.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error set file F" + (countFiles - 1) + ".rsdb length: " + e.getMessage());
             }
             return new PageId(countFiles -1, 0);
         } else {
@@ -89,7 +96,7 @@ public class DiskManager {
                 raf.setLength(dbConfiginstance.getPagesize() * (idPage + 1));
                 raf.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error increase file F" + (countFiles - 1) + ".rsdb length: " + e.getMessage());
             }
             return new PageId(countFiles-1, idPage);
         }
@@ -108,21 +115,21 @@ public class DiskManager {
             oos.close();
             System.out.println("State est enregistre " + saveFile.getAbsolutePath());
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error saving state to dm.save: " + e.getMessage());
         }
 
     }
 
     // Method pour charger l'etat des pages libres depuis un fichier
-    public void LoadState() {
+    public final void LoadState() {
         File saveFile = new File(dbConfiginstance.getDbpath() + "/dm.save");
         if (saveFile.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(saveFile))) {
                 freePages = (Stack<PageId>) ois.readObject();
                 ois.close();
-                System.out.println("State est charge de " + saveFile.getAbsolutePath());
+                System.out.println("DiskManager State est charge de " + saveFile.getAbsolutePath());
             } catch (IOException | ClassNotFoundException | ClassCastException  e) {
-                e.printStackTrace();
+                System.err.println("Error load state from dm.save: " + e.getMessage());
             }
         } else {
             System.out.println("Le fichier n'existe pas " + saveFile.getAbsolutePath());
@@ -135,24 +142,22 @@ public class DiskManager {
     }
     //Methode pour ecrire une page
     public void WritePage(PageId p , ByteBuffer buff){
-        try{
-            String path = "./BinData/"+"F"+p.getFileIdx()+".rsdb";
-            RandomAccessFile raf = new RandomAccessFile(path,"rw");
-            FileChannel fileChannel= raf.getChannel();
+        String path = "./BinData/"+"F"+p.getFileIdx()+".rsdb";
+        try (RandomAccessFile raf = new RandomAccessFile(path,"rw");
+            FileChannel fileChannel= raf.getChannel();) {
             buff.rewind();
             fileChannel.write(buff, p.getPageIdx() * dbConfiginstance.getPagesize());
             fileChannel.close();
             raf.close();
         }catch(IOException e){
-            e.printStackTrace();
+            System.err.println("Error writing page "+p.getPageIdx()+" to F"+p.getFileIdx()+".rsdb \n"+e.getMessage());
         }
     }
     //Methode pour lire une page
     public int ReadPage(PageId p, ByteBuffer buff) {//buff doit etre la taille d'une page
-        try {
-            String path = "./BinData/" + "F" + p.getFileIdx() + ".rsdb";
-            RandomAccessFile raf = new RandomAccessFile(path, "r");
-            FileChannel fileChannel = raf.getChannel();
+        String path = "./BinData/" + "F" + p.getFileIdx() + ".rsdb";
+        try (RandomAccessFile raf = new RandomAccessFile(path, "r");
+            FileChannel fileChannel = raf.getChannel();) {
             long pageOffset = p.getPageIdx() * dbConfiginstance.getPagesize();
             fileChannel.position(pageOffset);
             buff.rewind();
@@ -165,7 +170,7 @@ public class DiskManager {
             }
             return bytesRead;
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error read page "+p.getPageIdx()+" from F"+p.getFileIdx()+".rsdb \n"+e.getMessage());
             return -1;
         }
     }

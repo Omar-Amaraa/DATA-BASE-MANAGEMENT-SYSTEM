@@ -1,11 +1,13 @@
 package org.example;
-import java.nio.ByteBuffer;
-import java.util.*;
+import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
 
-public class BufferManager {
+public class BufferManager implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static DBConfig dbConfiginstance;
     private static DiskManager diskManager;
-    private static  List<Buffer> bufferPool = new LinkedList<>();
+    private static final List<Buffer> bufferPool = new LinkedList<>();
 
     public BufferManager(DBConfig dbConfiginstance, DiskManager diskManager) {
         BufferManager.dbConfiginstance = dbConfiginstance;
@@ -26,8 +28,8 @@ public class BufferManager {
             retbuffer.setPinCount(retbuffer.getPinCount() + 1);
             bufferPool.remove(retbuffer);
             bufferPool.addFirst(retbuffer);
-            System.out.println("La page est dans le buffer et mise à jour dans la queue MRU -> LRU\n");
-            System.out.println("Queue: "+bufferPool.toString());
+            // System.out.println("La page est dans le buffer et mise à jour dans la queue MRU -> LRU\n");
+            // System.out.println("Queue: "+bufferPool.toString());
             return retbuffer;
         }
 
@@ -35,21 +37,21 @@ public class BufferManager {
         retbuffer = new Buffer(pageId, 1, false);
         diskManager.ReadPage(pageId, retbuffer.getContenu());
         bufferPool.addFirst(retbuffer);
-        System.out.println("La page" + retbuffer.getPageId().toString() + "est chargée dans pool depuis le disque\n");
-        System.out.println("La page" + pageId.toString() + "est ajoutée dans la queue MRU -> LRU\n");
-        System.out.println("Queue: " + bufferPool.toString());
-
+        // System.out.println("La page" + retbuffer.getPageId().toString() + "est chargée dans pool depuis le disque\n");
+        // System.out.println("La page" + pageId.toString() + "est ajoutée dans la queue MRU -> LRU\n");
+        // System.out.println("Queue: " + bufferPool.toString());
+        
         // Si la taille du buffer est atteinte, on doit remplacer une page
         if (bufferPool.size() >= dbConfiginstance.getBm_buffercount()) {
-            Buffer removedBuffer = null;
+            Buffer removedBuffer;
             if (dbConfiginstance.getBm_policy().equals("LRU")) {
                 removedBuffer = bufferPool.removeLast();
-                System.out.println("Buffer est plein et on doit remplacer la page"+removedBuffer.getPageId().getPageIdx() +"avec la politique LRU\n");
-                System.out.println("Queue: " + bufferPool.toString());
+                // System.out.println("Buffer est plein et on doit remplacer la page"+removedBuffer.getPageId().getPageIdx() +"avec la politique LRU\n");
+                // System.out.println("Queue: " + bufferPool.toString());
             } else {
                 removedBuffer = bufferPool.removeFirst();
-                System.out.println("Buffer est plein et on doit remplacer la page"+removedBuffer.getPageId().getPageIdx() +"avec la politique LRU\n");
-                System.out.println("Queue: " + bufferPool.toString());
+                // System.out.println("Buffer est plein et on doit remplacer la page"+removedBuffer.getPageId().getPageIdx() +"avec la politique LRU\n");
+                // System.out.println("Queue: " + bufferPool.toString());
             }
         }
         return retbuffer;
@@ -57,7 +59,7 @@ public class BufferManager {
     }
     // Libère une page, décrémente le pin_count et met à jour le flag dirty
     public void FreePage(PageId pageId, boolean valdirty) {
-        Buffer buffer_iter = null;
+        Buffer buffer_iter;
         Buffer freedbuffer = null;
         for (int i = 0; i < bufferPool.size(); i++) {
             buffer_iter = bufferPool.get(i);
@@ -75,6 +77,10 @@ public class BufferManager {
                 freedbuffer = buffer_iter;
                 break;
             }
+        }
+        if (freedbuffer == null) {
+            System.out.println("La page n'est pas dans le buffer");
+            return;
         }
         bufferPool.remove(freedbuffer);
         for (int i = 0; i < bufferPool.size(); i++) {
