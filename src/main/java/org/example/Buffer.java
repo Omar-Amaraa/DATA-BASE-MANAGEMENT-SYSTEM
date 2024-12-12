@@ -3,7 +3,7 @@ package org.example;
 import java.nio.ByteBuffer;
 
 public class Buffer {
-    private PageId pageId;
+    private final PageId pageId;
     private int pinCount;
     private boolean dirtyFlag;
     private ByteBuffer contenu;
@@ -12,11 +12,11 @@ public class Buffer {
         this.pageId = pageId;
         this.pinCount = pinCount;
         this.dirtyFlag = dirtyFlag;
-        contenu = ByteBuffer.allocate(pageId.size());
+        this.contenu = ByteBuffer.allocate(pageId.size());
     }
 
-    public void setContenu(ByteBuffer contenu) {
-        this.contenu = contenu;
+    public void setContenu(ByteBuffer buff) {
+        this.contenu = buff;
     }
 
     public  PageId getPageId() {
@@ -41,13 +41,15 @@ public class Buffer {
     public  ByteBuffer getContenu() {
         if (contenu == null) {
             contenu = ByteBuffer.allocate(pageId.size());
-            
         }
         return contenu;
     }
-    public void setContenu(ByteBuffer buff, int offset) {
-        contenu.position(offset);
-        contenu.put(buff);
+    @Override
+    public String toString() {
+        return "Buffer{" +
+                pageId.toString() +
+                ", pinCount=" + pinCount +
+                ", dirtyFlag=" + dirtyFlag +
+                '}';
     }
-        
 }

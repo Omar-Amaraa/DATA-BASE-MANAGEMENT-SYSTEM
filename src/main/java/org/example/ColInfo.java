@@ -1,6 +1,9 @@
 package org.example;
 
-public class ColInfo {
+import java.io.Serializable;
+
+public class ColInfo implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String nom;
     private ColType type;
     private int tailleMax; // Utilisé pour CHAR(T) et VARCHAR(T)
@@ -14,6 +17,11 @@ public class ColInfo {
     public ColInfo(String nom, ColType type) {
         this(nom, type, 0); // Pour INT et REAL
     }
+    public ColInfo(String nom, String type, int tailleMax) {
+        this.nom = nom;
+        this.type = ColType.fromString(type);
+        this.tailleMax = tailleMax;
+    }
 
     public String getNom() {
         return nom;
@@ -26,9 +34,10 @@ public class ColInfo {
     public int getTailleMax() {
         return tailleMax;
     }
-}
 
-// Enum pour les types de colonnes
-enum ColType {
-    INT, REAL, CHAR, VARCHAR
+    @Override
+    public String toString() {
+        return this.nom+":"+this.type+(this.tailleMax > 0 ? "("+this.tailleMax+")" : "");
+    }
+    
 }

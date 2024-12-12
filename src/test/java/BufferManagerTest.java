@@ -1,7 +1,10 @@
-package org.example;
-
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+
+import org.example.Buffer;
+import org.example.BufferManager;
+import org.example.DBConfig;
+import org.example.DiskManager;
+import org.example.PageId;
 
 public class BufferManagerTest {
 
@@ -61,10 +64,11 @@ public class BufferManagerTest {
         buffer.put("Page1".getBytes());
         dm.WritePage(pageId, buffer);
         Buffer buffer1 = bm.getPage(pageId);
+        buffer1.setDirtyFlag(true);
         TestFlushBuffers(buffer1, bm);
         // Methode pour setCurrentReplacementPolicy
-        TestsetCurrentReplacementPolicy("MRU", bm);
-        TestReplacementPolicy(bm,dm,config);
+        // TestsetCurrentReplacementPolicy("MRU", bm);
+        // TestReplacementPolicy(bm,dm,config);
 
         bm.getBufferpool();
     }

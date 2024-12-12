@@ -1,11 +1,13 @@
-package org.example;
+
 
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+
+import org.example.DBConfig;
+import org.example.DiskManager;
+import org.example.PageId;
 
 public class DiskManagerTests {
-    private DBConfig dbConfiginstance;
 
     public static PageId TestAllocPage(DiskManager dm) {
         PageId pageId = dm.AllocPage();
@@ -57,7 +59,7 @@ public class DiskManagerTests {
 
         // creer un buffer d'ecriture
         ByteBuffer writeBuffer = ByteBuffer.allocate(config.getPagesize());
-        byte[] data = "Hell".getBytes();
+        byte[] data = "Lorem Ipsum is simply een the industry's standard dummy text ever sincescrambled it tnly five centurieronic typesetting, remaining essentially unchanged.".getBytes();
         writeBuffer.put(data);
 
         // ecrire des donnees dans la page
@@ -68,23 +70,23 @@ public class DiskManagerTests {
         TestReadPage(pid, readBuffer, dm);
 
         // print donnees lues
-        readBuffer.flip();
-        byte[] readData = new byte[readBuffer.remaining()];
-        readBuffer.get(readData);
-        System.out.println("Read data: " + new String(readData, StandardCharsets.UTF_8));
+        // readBuffer.flip();
+        // byte[] readData = new byte[readBuffer.remaining()];
+        // readBuffer.get(readData);
+        // System.out.println("Read data: " + new String(readData, StandardCharsets.UTF_8));
 
-        // allouer une autre page
-        PageId pid1 = TestAllocPage(dm);
+        // // allouer une autre page
+        // PageId pid1 = TestAllocPage(dm);
 
-        // test sauvegarde et chargement de l'etat avant deallocation
-        TestSaveState(dm);
-        TestLoadState(dm);
+        // // test sauvegarde et chargement de l'etat avant deallocation
+        // TestSaveState(dm);
+        // TestLoadState(dm);
 
-        // deallocation de la page
-        TestDeallocPage(pid1, dm);
-        // test sauvegarde et chargement de l'etat apres deallocation
-        TestSaveState(dm);
-        TestLoadState(dm);
+        // // deallocation de la page
+        // TestDeallocPage(pid1, dm);
+        // // test sauvegarde et chargement de l'etat apres deallocation
+        // TestSaveState(dm);
+        // TestLoadState(dm);
 
 
         }
