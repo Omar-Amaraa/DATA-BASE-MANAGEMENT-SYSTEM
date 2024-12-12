@@ -45,9 +45,6 @@ public class Buffer {
         }
         return contenu;
     }
-    public void setContenu(ByteBuffer buff, int offset) {
-        contenu.position(offset);
-        contenu.put(buff);
-    }
+
         
 }

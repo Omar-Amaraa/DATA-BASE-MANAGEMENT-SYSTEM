@@ -17,7 +17,6 @@ public class BufferManager {
 
     // Fonction pour obtenir une page depuis le buffer
     public Buffer getPage(PageId pageId) {
-
         // Si la page est deja dans le buffer, on la retourne
         for (Buffer i : bufferPool) {
             if ((i.getPageId().equals(pageId))) {

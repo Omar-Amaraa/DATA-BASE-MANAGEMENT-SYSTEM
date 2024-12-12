@@ -55,6 +55,7 @@ public class Relation {
     }
 
     public int writeRecordToBuffer(Record record, ByteBuffer buffer, int pos) {
+
         int initialPos = pos;
         buffer.position(pos);
         for (int i = 0; i < colonnes.size(); i++) {
@@ -140,27 +141,47 @@ public class Relation {
     }
 
     void addDataPage() {
-        PageId nouvPage = diskManager.AllocPage();
-        Buffer buffHeaderPage=bufferManager.getPage(headerPageId);
-        ByteBuffer buff = buffHeaderPage.getContenu();
-        int nbPages = buff.getInt(4);
-        buff.position(4);
-        buff.putInt(++nbPages);
-        buff.position(4+12 * (nbPages-1));
-        buff.putInt(nouvPage.getFileIdx());
-        buff.putInt(nouvPage.getPageIdx());
-        buff.putInt(nouvPage.size());
-        buffHeaderPage.setContenu(buff,4+12 * (nbPages-1));
-        buffHeaderPage.setDirtyFlag(true);
-        Buffer buffDataPage = bufferManager.getPage(nouvPage);
-        buffDataPage.getContenu().position(nouvPage.size() - 4);
-        buffDataPage.getContenu().putInt(0);// pos debut libre
-        buffDataPage.getContenu().position(nouvPage.size() - 8);
-        buffDataPage.getContenu().putInt(10);// nb slots
-        buffDataPage.setDirtyFlag(true);
-        bufferManager.FlushBuffers();
-        
+        try {
+            // Allouer une nouvelle page
+            PageId nouvPage = diskManager.AllocPage();
+            if (nouvPage == null) {
+                System.out.println("Erreur : L'allocation de la page a échoué.");
+                return;
+            }
+
+            // Mise à jour de l'en-tête de la page
+            Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
+            ByteBuffer buff = buffHeaderPage.getContenu();
+            int nbPages = buff.getInt(4);
+            buff.position(4);
+            buff.putInt(++nbPages);
+            buff.position(4 + 12 * (nbPages - 1));
+            buff.putInt(nouvPage.getFileIdx());
+            buff.putInt(nouvPage.getPageIdx());
+            buff.putInt(nouvPage.size());
+            buffHeaderPage.setContenu(buff);
+            buffHeaderPage.setDirtyFlag(true);
+
+            // Initialisation de la nouvelle page de données
+            Buffer buffDataPage = bufferManager.getPage(nouvPage);
+            ByteBuffer dataBuff = buffDataPage.getContenu();
+            dataBuff.position(nouvPage.size() - 4);
+            dataBuff.putInt(0); // Position de début libre
+            dataBuff.position(nouvPage.size() - 8);
+            dataBuff.putInt(10); // Nombre initial de slots
+            buffDataPage.setDirtyFlag(true);
+
+            // Sauvegarde des modifications
+            bufferManager.FlushBuffers();
+
+            System.out.println("Page de données ajoutée avec succès : " + nouvPage);
+
+        } catch (Exception e) {
+            System.err.println("Une erreur est survenue lors de l'ajout de la page de données : " + e.getMessage());
+            e.printStackTrace();
+        }
     }
+
 
     PageId getFreeDataPageId(int sizeRecord){
         Buffer headerBuffer = bufferManager.getPage(headerPageId);
@@ -178,7 +199,9 @@ public class Relation {
         }
         return null;
     }
+
     RecordId writeRecordToDataPage(Record record, PageId pageId) {
+
         Buffer buffDataPage = bufferManager.getPage(pageId);
         ByteBuffer buff = buffDataPage.getContenu();
         int posDebutLibre = buff.getInt(pageId.size() - 4);// position de début libre pour écrire le record
