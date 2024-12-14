@@ -3,14 +3,13 @@ package org.example;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Database implements Serializable {
     private static final long serialVersionUID = 1L;
     private String nom;
-    private DiskManager dm;
-    private BufferManager bm;
-    private List<Relation> tables = new ArrayList<>();
+    private final DiskManager dm;
+    private final BufferManager bm;
+    private final ArrayList<Relation> tables = new ArrayList<>();
 
 
     public Database(String nom, DiskManager dm, BufferManager bm) {
@@ -87,7 +86,7 @@ public class Database implements Serializable {
         }
     }
 
-    public List<Relation> getAllTables() {
+    public ArrayList<Relation> getAllTables() {
         return this.tables;
     }
     

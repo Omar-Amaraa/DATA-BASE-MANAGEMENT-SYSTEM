@@ -105,13 +105,15 @@ public class DBManager {
     public void SaveState() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(config.getDbpath() + "/databases.save"))) {
             oos.writeObject(this.databases);
-            System.out.println("DBManager State saved");
+            //System.out.println("DBManager State saved");
         } catch (IOException e) {
-            System.err.println("Erreur lors de la sauvegarde de l'état : " + e.getMessage());
+            //System.err.println("Erreur lors de la sauvegarde de l'état : " + e.getMessage());
             // e.printStackTrace();
         }
     }
 
+    
+    @SuppressWarnings("unchecked")
     public final void LoadState() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(config.getDbpath() + "/databases.save"))) {
             Object obj = ois.readObject();
@@ -121,9 +123,9 @@ public class DBManager {
             if (!this.databases.isEmpty()) {
                 this.courammentDatabase = this.databases.values().iterator().next();
             }
-            System.out.println("DBManager chargé");
+            //System.out.println("DBManager chargé");
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Erreur lors de la lecture de l'état  " + e.getMessage());
+            //System.err.println("Erreur lors de la lecture de l'état  " + e.getMessage());
         }
     }
 

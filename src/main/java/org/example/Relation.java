@@ -4,14 +4,13 @@ package org.example;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.List;
 
 
 public class Relation implements Serializable {
     private static final long serialVersionUID = 1L;
     private String nomrelation;
     private int nbcolonnes;
-    private final List<ColInfo> colonnes;
+    private final ArrayList<ColInfo> colonnes;
     private final PageId headerPageId;
     private final DiskManager diskManager;
     private final BufferManager bufferManager;
@@ -44,7 +43,7 @@ public class Relation implements Serializable {
         return colonnes.get(i);
     }
 
-    public List<ColInfo> getColonnes() {
+    public ArrayList<ColInfo> getColonnes() {
         return colonnes;
     }
 
@@ -238,8 +237,8 @@ public class Relation implements Serializable {
     }
 
 
-    public List<Record> getRecordsInDataPage(PageId pageId){
-        List<Record> records = new ArrayList<>();
+    public ArrayList<Record> getRecordsInDataPage(PageId pageId){
+        ArrayList<Record> records = new ArrayList<>();
         Buffer buffDataPage = bufferManager.getPage(pageId);
         ByteBuffer buff = buffDataPage.getContenu();
         buff.position(pageId.size() - 8);
@@ -266,8 +265,8 @@ public class Relation implements Serializable {
         return records;
     }
 
-    public List<PageId> getDataPages(){
-        List<PageId> dataPages = new ArrayList<>();
+    public ArrayList<PageId> getDataPages(){
+        ArrayList<PageId> dataPages = new ArrayList<>();
         Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
         ByteBuffer buff = buffHeaderPage.getContenu();
         int nbDataPages = buff.getInt(0);
@@ -301,8 +300,8 @@ public class Relation implements Serializable {
         return writeRecordToDataPage(record, pageId);
     }
 
-    public List<Record> GetAllRecords(){
-        List<Record> records = new ArrayList<>();
+    public ArrayList<Record> GetAllRecords(){
+        ArrayList<Record> records = new ArrayList<>();
         Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
         ByteBuffer buff = buffHeaderPage.getContenu();
         int nbDataPages = buff.getInt(0);
