@@ -3,7 +3,7 @@ package org.example;
 import java.nio.ByteBuffer;
 
 public class Buffer {
-    private PageId pageId;
+    private final PageId pageId;
     private int pinCount;
     private boolean dirtyFlag;
     private ByteBuffer contenu;

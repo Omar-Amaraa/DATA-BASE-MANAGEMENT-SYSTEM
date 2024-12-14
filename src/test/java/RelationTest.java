@@ -1,11 +1,19 @@
-package org.example;
-
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.example.BufferManager;
+import org.example.ColInfo;
+import org.example.ColType;
+import org.example.DBConfig;
+import org.example.DiskManager;
+import org.example.PageId;
+import org.example.Record;
+import org.example.RecordId;
+import org.example.Relation;
+
 public class RelationTest {
-    static DBConfig config = DBConfig.LoadDBConfig("./files/dataset_1.json");
-    static DiskManager dm = new DiskManager(config);
+    static final DBConfig config = DBConfig.LoadDBConfig("./files/dataset_1.json");
+    static final DiskManager dm = new DiskManager(config);
     static BufferManager bm = new BufferManager(config, dm);
 
     // Méthode pour créer une relation "Personnes"
@@ -50,7 +58,7 @@ public class RelationTest {
         }
     }
     public static void testInsertRecord(Relation r, Record record) throws Exception {
-        RecordId id = r.InsertRecord(record);
+        RecordId id = r.insertRecord(record);
         System.out.println("RecordId du record inséré : " + id);
     }
     public static void testGetAllRecords(Relation r) throws Exception {
@@ -64,7 +72,6 @@ public class RelationTest {
     public static void testRelation() {
         // Création de la relation
         Relation relation = createRelation("Personnes", 4);
-
         // // Allocation d'un buffer
         // ByteBuffer buffer = ByteBuffer.allocate(1024);
 
@@ -116,7 +123,7 @@ public class RelationTest {
             testInsertRecord(relation,record2);
             testGetAllRecords(relation);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("An error occurred: " + e.getMessage());
         }
     }
 

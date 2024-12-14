@@ -1,11 +1,13 @@
-package org.example;
+
 
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+
+import org.example.DBConfig;
+import org.example.DiskManager;
+import org.example.PageId;
 
 public class DiskManagerTests {
-    private DBConfig dbConfiginstance;
 
     public static PageId TestAllocPage(DiskManager dm) {
         PageId pageId = dm.AllocPage();
