@@ -50,7 +50,7 @@ public class RelationTest {
         }
     }
     public static void testInsertRecord(Relation r, Record record) throws Exception {
-        RecordId id = r.InsertRecord(record);
+        RecordId id = r.insertRecord(record);
         System.out.println("RecordId du record inséré : " + id);
     }
     public static void testGetAllRecords(Relation r) throws Exception {
