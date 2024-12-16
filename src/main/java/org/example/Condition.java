@@ -27,11 +27,11 @@ public class Condition {
         left = parts[0].trim();
         right = parts[1].trim();
         // term1
-        if (left.startsWith("\"") && left.endsWith("\"")) { // 'value' (string)
+        if (left.startsWith("\"") && left.endsWith("\"")) { // 'valeur' (string)
             this.term1 = left.substring(1, left.length() - 1);
             this.isTerm1Column = false;
             this.term1Type = ColType.CHAR;
-        } else if (left.matches(".*[a-zA-Z].*")) { // contains any alphabet character
+        } else if (left.matches(".*[a-zA-Z].*")) { // contient des caractères alphabétiques
             if (left.contains(".")) { // <alias>.<column-name>
                 this.isTerm1Column = true;
                 String[] leftparts = left.split("\\.");
@@ -48,7 +48,7 @@ public class Condition {
                 }
             } else {
                 // lack of alias
-                System.out.println("Error: column name"+left+" in term1 must be prefixed with alias");
+                System.out.println("Erreur : le nom de colonne "+left+" dans term1 doit être préfixé par un alias");
             }
         } else { // <number>
             if (left.contains(".")) { // real number
@@ -62,11 +62,11 @@ public class Condition {
             }
         }
         // term2
-        if (right.startsWith("\"") && right.endsWith("\"")) { // 'value' (string)
+        if (right.startsWith("\"") && right.endsWith("\"")) { // 'valeur' (string)
             this.term2 = right.substring(1, right.length() - 1);
             this.isTerm2Column = false;
             this.term2Type = ColType.CHAR;
-        } else if (right.matches(".*[a-zA-Z].*")) { // contains any alphabet character
+        } else if (right.matches(".*[a-zA-Z].*")) { // contient des caractères alphabétiques
             if (right.contains(".")) { // <alias>.<column-name>
                 this.isTerm2Column = true;
                 String[] rightparts = right.split("\\.");
@@ -82,8 +82,8 @@ public class Condition {
                     }
                 }                
             } else {
-            // lack of alias
-            System.out.println("Error: column name "+right+" in term2 must be prefixed with alias");
+            // manque d'alias
+            System.out.println("Erreur : le nom de colonne "+right+" dans term2 doit être préfixé par un alias");
             }
         } else { // <number>
             if (right.contains(".")) { // real number
@@ -100,7 +100,7 @@ public class Condition {
 
     public boolean evaluate(Record row) {
         if (this.term1Type != this.term2Type){
-            System.out.println("Error: incompatible types");
+            System.out.println("Erreur : types incompatibles");
             return false;
         }
         if (this.isTerm1Column) {

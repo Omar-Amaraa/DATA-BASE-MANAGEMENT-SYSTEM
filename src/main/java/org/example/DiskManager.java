@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 import java.util.Stack;
 
 public class DiskManager implements Serializable {
-
+    private static final long serialVersionUID = 1L;
     private static DBConfig dbConfiginstance;
     private static Stack<PageId> freePages = new Stack<>(); // plus pratique avec les Piles comme on va de toutes facons utiliser le dernier element
     //comme ca on peut utiliser les fonctions prédéfinies de la Classe Stack isEmpty() et pop()
@@ -74,7 +74,7 @@ public class DiskManager implements Serializable {
             createEmptyFile();
             try (RandomAccessFile raf = new RandomAccessFile("./BinData/F" + (countFiles - 1) + ".rsdb","rw" )) {
                 raf.setLength(dbConfiginstance.getPagesize());
-                raf.close();
+                // raf.close();
             } catch (IOException e) {
                 System.err.println("Error set file F" + (countFiles - 1) + ".rsdb length:" + e.getMessage());
             }
@@ -85,7 +85,7 @@ public class DiskManager implements Serializable {
             createEmptyFile();
             try (RandomAccessFile raf = new RandomAccessFile("./BinData/F" + (countFiles - 1) + ".rsdb","rw" )) {
                 raf.setLength(dbConfiginstance.getPagesize());
-                raf.close();
+                // raf.close();
             } catch (IOException e) {
                 System.err.println("Error set file F" + (countFiles - 1) + ".rsdb length: " + e.getMessage());
             }
@@ -94,7 +94,7 @@ public class DiskManager implements Serializable {
             int idPage = ((int) Math.ceil(currentFile.length() / dbConfiginstance.getPagesize()));
             try (RandomAccessFile raf = new RandomAccessFile("./BinData/F" + (countFiles - 1) + ".rsdb","rw" )) {
                 raf.setLength(dbConfiginstance.getPagesize() * (idPage + 1));
-                raf.close();
+                // raf.close();
             } catch (IOException e) {
                 System.err.println("Error increase file F" + (countFiles - 1) + ".rsdb length: " + e.getMessage());
             }
@@ -112,8 +112,8 @@ public class DiskManager implements Serializable {
         File saveFile = new File(dbConfiginstance.getDbpath() + "/dm.save");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(saveFile))) {
             oos.writeObject(freePages);
-            oos.close();
-            System.out.println("State est enregistre " + saveFile.getAbsolutePath());
+            // oos.close();
+            //System.out.println("State est enregistre " + saveFile.getAbsolutePath());
         } catch (IOException e) {
             System.err.println("Error saving state to dm.save: " + e.getMessage());
         }
@@ -121,15 +121,21 @@ public class DiskManager implements Serializable {
     }
 
     // Method pour charger l'etat des pages libres depuis un fichier
+    @SuppressWarnings("unchecked")
     public final void LoadState() {
         File saveFile = new File(dbConfiginstance.getDbpath() + "/dm.save");
         if (saveFile.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(saveFile))) {
-                freePages = (Stack<PageId>) ois.readObject();
-                ois.close();
-                System.out.println("DiskManager State est charge de " + saveFile.getAbsolutePath());
+                Object obj = ois.readObject();
+                if (obj instanceof Stack<?>) {
+                    freePages = (Stack<PageId>) obj;
+                } else {
+                    throw new ClassCastException("Expected a Stack<PageId> but found " + obj.getClass().getName());
+                }
+                // ois.close();
+                //System.out.println("DiskManager State est charge de " + saveFile.getAbsolutePath());
             } catch (IOException | ClassNotFoundException | ClassCastException  e) {
-                System.err.println("Error load state from dm.save: " + e.getMessage());
+                //System.err.println("Error load state from dm.save: " + e.getMessage());
             }
         } else {
             System.out.println("Le fichier n'existe pas " + saveFile.getAbsolutePath());
@@ -147,8 +153,8 @@ public class DiskManager implements Serializable {
             FileChannel fileChannel= raf.getChannel();) {
             buff.rewind();
             fileChannel.write(buff, p.getPageIdx() * dbConfiginstance.getPagesize());
-            fileChannel.close();
-            raf.close();
+            // fileChannel.close();
+            // raf.close();
         }catch(IOException e){
             System.err.println("Error writing page "+p.getPageIdx()+" to F"+p.getFileIdx()+".rsdb \n"+e.getMessage());
         }
@@ -162,8 +168,8 @@ public class DiskManager implements Serializable {
             fileChannel.position(pageOffset);
             buff.rewind();
             int bytesRead = fileChannel.read(buff);
-            fileChannel.close();
-            raf.close();
+            // fileChannel.close();
+            // raf.close();
             if (bytesRead == -1) {
                 System.out.println("La page est vide");
                 return 0;
