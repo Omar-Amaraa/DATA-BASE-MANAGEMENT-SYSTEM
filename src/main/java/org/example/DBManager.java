@@ -14,11 +14,13 @@ public class DBManager {
     private final DBConfig config;
     private Map<String, Database> databases;
     private Database courammentDatabase;
+    private final DBIndexManager indexManager;//Omar AMARA 12/16/2024
 
     public DBManager(DBConfig config, DiskManager dm, BufferManager bm) {
         this.config = config;
         this.dm = dm;
         this.bm = bm;
+        this.indexManager = new DBIndexManager();//Omar AMARA 12/16/2024
         this.databases = new HashMap<>();
         this.LoadState();
     }
@@ -182,5 +184,8 @@ public class DBManager {
         ProjectOperator projectOperator = new ProjectOperator(tab, colonnesindexes, conds);
         RecordPrinter recordPrinter = new RecordPrinter(projectOperator, tab.getColonnes(), colonnesindexes);
         recordPrinter.printRecords();
+    }
+    public DBIndexManager getIndexManager() {
+        return indexManager;
     }
 }
