@@ -22,7 +22,7 @@ public class DiskManager implements Serializable {
 
     /// constructeur
     public DiskManager(DBConfig dbConfiginstance) {
-        DiskManager.dbConfiginstance = dbConfiginstance;
+        this.dbConfiginstance = dbConfiginstance;
         countFiles = countRSDBFiles(); // chaque fois que le DiskManager est instancié, on compte le nombre de fichiers rsdb sinon on ne sait pas où on en est
         LoadState(); //chaque fois que le DiskManager est instancié, on charge l'état des pages libres sinon on ne sait pas où on en est
     }
@@ -66,7 +66,7 @@ public class DiskManager implements Serializable {
     }
 
     /// verifie s'il n'y a plus de place et cree un fichier
-    public PageId AllocPage() {
+    public  PageId AllocPage() {
         if (!freePages.isEmpty()) {
             return freePages.pop();
         }
