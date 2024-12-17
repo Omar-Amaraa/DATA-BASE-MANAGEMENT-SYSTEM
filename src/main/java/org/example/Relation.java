@@ -314,6 +314,70 @@ public class Relation implements Serializable {
         }
         return records;
     }
+    public ArrayList<RecordId> GetAllRecordIds() { //Omar AMARA 12/16/2024
+        ArrayList<RecordId> recordIds = new ArrayList<>();
+        Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
+        ByteBuffer buff = buffHeaderPage.getContenu();
+        int nbDataPages = buff.getInt(0);
+
+        for (int i = 0; i < nbDataPages; i++) {
+            buff.position(4 + i * 12);
+            int fileIdx = buff.getInt();
+            int pageIdx = buff.getInt();
+            PageId pageId = new PageId(fileIdx, pageIdx);
+
+            // Récupérer les `RecordId` depuis chaque page de données
+            Buffer buffDataPage = bufferManager.getPage(pageId);
+            ByteBuffer dataBuff = buffDataPage.getContenu();
+            dataBuff.position(pageId.size() - 8);
+            int nbSlots = dataBuff.getInt();
+
+            for (int j = 0; j < nbSlots; j++) {
+                int slotIdx = j;
+                recordIds.add(new RecordId(pageId, slotIdx));
+            }
+
+            bufferManager.FreePage(pageId, false);
+        }
+
+        bufferManager.FreePage(headerPageId, false);
+        return recordIds;
+    }
+
+    public Record getRecordById(RecordId recordId) { //Omar AMARA 12/16/2024
+        PageId pageId = recordId.getPageId();
+        int slotIdx = recordId.getSlotIdx();
+
+        // Accéder à la page de données
+        Buffer buffDataPage = bufferManager.getPage(pageId);
+        ByteBuffer buff = buffDataPage.getContenu();
+
+        // Récupérer le nombre de slots
+        buff.position(pageId.size() - 8);
+        int nbSlots = buff.getInt();
+
+        // Vérifier si le slot est valide
+        if (slotIdx >= nbSlots) {
+            throw new IllegalArgumentException("Invalid slot index: " + slotIdx);
+        }
+
+        // Localiser le slot
+        buff.position(pageId.size() - 8 - 8 * (slotIdx + 1));
+        int posRecord = buff.getInt();
+        int sizeRecord = buff.getInt();
+
+        // Vérifier les positions
+        if (sizeRecord == 0 || posRecord == -1) {
+            throw new IllegalArgumentException("Invalid record at slot " + slotIdx);
+        }
+
+        // Lire le record depuis le buffer
+        Record record = new Record();
+        readFromBuffer(record, buff, posRecord);
+
+        bufferManager.FreePage(pageId, false);
+        return record;
+    }
 
     @Override
     public boolean equals(Object obj) {
