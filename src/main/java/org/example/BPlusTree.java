@@ -1,5 +1,6 @@
 package org.example;
 
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,10 +9,10 @@ import java.util.List;
 //Omar AMARA 12/16/2024
 // B+ Tree class for indexing
 class BPlusTree {
-
+    
     private BPlusTreeNode root; // Root node of the tree
     private final int order; // Maximum number of children per node
-
+    
     public BPlusTree(int order) {
         if (order < 3) {
             throw new IllegalArgumentException("Order must be at least 3");
@@ -19,7 +20,7 @@ class BPlusTree {
         this.root = new BPlusTreeNode(true);
         this.order = order;
     }
-
+    
     // Insert a key and its associated RecordId into the tree
     public void insert(RecordId rid, Object key) {
         BPlusTreeNode leaf = findLeaf(key);
@@ -30,7 +31,7 @@ class BPlusTree {
             splitLeaf(leaf);
         }
     }
-
+    
     // Find the appropriate leaf node for a given key
     private BPlusTreeNode findLeaf(Object key) {
         BPlusTreeNode node = root;
@@ -45,7 +46,7 @@ class BPlusTree {
         System.out.println("findLeaf: Found leaf with keys: " + node.keys);
         return node;
     }
-
+    @SuppressWarnings("unchecked")
     // Insert into a leaf node
     private void insertIntoLeaf(BPlusTreeNode leaf, Object key, RecordId rid) {
         int pos = Collections.binarySearch(leaf.keys, key, (a, b) -> ((Comparable<Object>) a).compareTo(b));
@@ -55,7 +56,7 @@ class BPlusTree {
         leaf.keys.add(pos, key);
         leaf.recordIds.add(pos, rid);
     }
-
+    
     // Split a leaf node and adjust the parent node
     private void splitLeaf(BPlusTreeNode leaf) {
         int mid = (order + 1) / 2;
@@ -82,7 +83,7 @@ class BPlusTree {
             insertIntoParent(leaf, newLeaf, newLeaf.keys.getFirst());
         }
     }
-
+    @SuppressWarnings("unchecked")
     // Insert a new key into the parent node after splitting
     private void insertIntoParent(BPlusTreeNode left, BPlusTreeNode right, Object key) {
         BPlusTreeNode parent = findParent(root, left);
@@ -129,7 +130,7 @@ class BPlusTree {
             insertIntoParent(internal, newInternal, promotedKey);
         }
     }
-
+    
     // Find the parent node of a given child node
     private BPlusTreeNode findParent(BPlusTreeNode current, BPlusTreeNode target) {
         if (current.isLeaf || current.children.isEmpty()) {
@@ -148,7 +149,6 @@ class BPlusTree {
         }
         return null;
     }
-
     // Search for a key in the tree and return its associated RecordId(s)
     public List<RecordId> search(Object key) {
         // Convert key from String to Integer if necessary
@@ -188,4 +188,6 @@ class BPlusTree {
         System.out.println("search: Total matches found: " + result.size());
         return result;
     }
+   
+    
 }
