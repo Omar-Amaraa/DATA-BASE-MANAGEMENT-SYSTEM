@@ -4,15 +4,19 @@ public class ColInfo {
     private String nom;
     private ColType type;
     private int tailleMax; // Utilisé pour CHAR(T) et VARCHAR(T)
+    private String alias;
+
 
     public ColInfo(String nom, ColType type, int tailleMax) {
         this.nom = nom;
         this.type = type;
         this.tailleMax = tailleMax;
+        this.alias = "";
     }
 
     public ColInfo(String nom, ColType type) {
-        this(nom, type, 0); // Pour INT et REAL
+        this(nom, type, 0);
+        this.alias = ""; // Pour INT et REAL
     }
 
     public String getNom() {
@@ -25,6 +29,16 @@ public class ColInfo {
 
     public int getTailleMax() {
         return tailleMax;
+    }
+
+    // Getter pour l'alias
+    public String getAlias() {
+        return alias;
+    }
+
+    // Setter pour définir l'alias
+    public void setAlias(String alias) {
+        this.alias = alias;
     }
 }
 

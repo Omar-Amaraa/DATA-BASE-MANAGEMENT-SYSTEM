@@ -1,28 +1,27 @@
 package org.example;
 
 import java.util.List;
-
 public class PageOrientedJoinOperator implements IRecordIterator {
-    private final Relation table1;
-    private final Relation table2;
-    private final List<Condition> conditions;
     private final PageDirectoryIterator table1Pages;
     private final PageDirectoryIterator table2Pages;
-
     private DataPageHoldRecordIterator table1Records;
     private DataPageHoldRecordIterator table2Records;
 
     private Record currentRecord1;
     private Record currentRecord2;
 
-    public PageOrientedJoinOperator(Relation table1, String alias1, Relation table2, String alias2, List<Condition> conditions) {
-        this.table1 = table1;
-        this.table2 = table2;
-        this.conditions = conditions;
+    private final List<Condition> conditions;
+    private final BufferManager bm;
+    private final Relation table1; // Ajout de table1 en tant qu'attribut
+    private final Relation table2; // Ajout de table2 en tant qu'attribut
 
-        // Initialisation des itérateurs de pages
+    public PageOrientedJoinOperator(Relation table1, Relation table2, List<Condition> conditions, BufferManager bm) {
         this.table1Pages = new PageDirectoryIterator(table1);
         this.table2Pages = new PageDirectoryIterator(table2);
+        this.table1 = table1; // Initialisation de table1
+        this.table2 = table2; // Initialisation de table2
+        this.conditions = conditions;
+        this.bm = bm;
 
         this.table1Records = null;
         this.table2Records = null;
@@ -32,36 +31,35 @@ public class PageOrientedJoinOperator implements IRecordIterator {
 
     @Override
     public boolean hasNext() {
-        // Parcours des pages et des records de la table1 et table2 pour trouver un tuple qui satisfait les conditions
         try {
             while (true) {
-                // Si aucun record courant dans table1, avancer
                 if (table1Records == null || !table1Records.hasNext()) {
-                    if (!table1Pages.hasNext()) {
-                        return false; // Fin des pages de table1
-                    }
-                    table1Records = new DataPageHoldRecordIterator(table1Pages.next(), table1.getBufferManager());
+                    PageId nextPage1 = table1Pages.GetNextDataPageId();
+                    if (nextPage1 == null) return false; // Fin des pages
+                    System.out.println("Debug: Chargement de la page suivante de table1 : " + nextPage1);
+                    table1Records = new DataPageHoldRecordIterator(nextPage1, bm);
+                    currentRecord1 = table1Records.next();
                 }
 
-                // Si aucun record courant dans table2, avancer
                 if (table2Records == null || !table2Records.hasNext()) {
-                    if (!table2Pages.hasNext()) {
-                        // Réinitialiser l'itération sur table2 pour la prochaine page de table1
+                    PageId nextPage2 = table2Pages.GetNextDataPageId();
+                    if (nextPage2 == null) {
                         table2Pages.Reset();
-                        if (!table2Pages.hasNext()) return false; // Si table2 est terminée
-                        table2Records = new DataPageHoldRecordIterator(table2Pages.next(), table2.getBufferManager());
+                        table2Records = null;
+                        currentRecord1 = table1Records.next();
+                        continue;
                     }
-                    currentRecord1 = table1Records.next(); // Passer au prochain record de table1
+                    System.out.println("Debug: Chargement de la page suivante de table2 : " + nextPage2);
+                    table2Records = new DataPageHoldRecordIterator(nextPage2, bm);
                 }
 
-                // Parcours des records de table2
-                while (table2Records.hasNext()) {
-                    currentRecord2 = table2Records.next();
-                    if (evaluateConditions(currentRecord1, currentRecord2)) {
-                        return true; // Une paire de tuples satisfait les conditions
-                    }
+                currentRecord2 = table2Records.next();
+                System.out.println("Debug: Comparaison des tuples : TR1 = " + currentRecord1 + ", TR2 = " + currentRecord2);
+
+                if (evaluateConditions(currentRecord1, currentRecord2)) {
+                    System.out.println("Debug: Records satisfaits : " + currentRecord1 + ", " + currentRecord2);
+                    return true;
                 }
-                table2Records.Reset(); // Réinitialiser les records pour la prochaine itération de table1
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -71,28 +69,16 @@ public class PageOrientedJoinOperator implements IRecordIterator {
 
     @Override
     public Record next() {
-        if (currentRecord1 == null || currentRecord2 == null) {
-            throw new IllegalStateException("No more records to return.");
-        }
-
-        // Combiner les deux records
         Record combinedRecord = new Record();
         combinedRecord.getValeurs().addAll(currentRecord1.getValeurs());
         combinedRecord.getValeurs().addAll(currentRecord2.getValeurs());
         return combinedRecord;
     }
 
-    private boolean evaluateConditions(Record row1, Record row2) {
-        for (Condition condition : conditions) {
-            if (!condition.evaluate(row1, row2)) {
-                return false; // Si une condition échoue, retourne faux
-            }
-        }
-        return true; // Toutes les conditions sont satisfaites
-    }
-
     @Override
     public void Close() {
+        table1Pages.Close();
+        table2Pages.Close();
         if (table1Records != null) table1Records.Close();
         if (table2Records != null) table2Records.Close();
     }
@@ -103,7 +89,12 @@ public class PageOrientedJoinOperator implements IRecordIterator {
         table2Pages.Reset();
         table1Records = null;
         table2Records = null;
-        currentRecord1 = null;
-        currentRecord2 = null;
+    }
+
+    private boolean evaluateConditions(Record r1, Record r2) {
+        for (Condition condition : conditions) {
+            if (!condition.evaluate(r1, r2)) return false;
+        }
+        return true;
     }
 }

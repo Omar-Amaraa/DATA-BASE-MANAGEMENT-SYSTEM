@@ -1,9 +1,8 @@
 package org.example;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class SGBD {
@@ -11,6 +10,7 @@ public class SGBD {
     private final DiskManager diskManager;
     private final BufferManager bufferManager;
     private final DBManager dbManager;
+
 
     public SGBD(DBConfig dbConfig) {
         this.dbConfig = dbConfig;
@@ -28,11 +28,11 @@ public class SGBD {
             String[] parts = command.split(" ");
             switch (parts[0].toUpperCase()) {
                 case "CREATE" -> {
-                    switch (parts[1].toUpperCase()) {  
+                    switch (parts[1].toUpperCase()) {
                         case "DATABASE" -> processCreateDBCommand(command);
                         case "TABLE" -> processCreateTableCommand(command);
-                        default ->  System.out.println("Invalid command: " + command);
-                    } 
+                        default -> System.out.println("Invalid command: " + command);
+                    }
                 }
                 case "SET" -> processSetDBCommand(command);
 
@@ -62,16 +62,6 @@ public class SGBD {
                 default -> System.out.println("Invalid command: " + command);
             }
         }
-    }
-
-    private void processCreateDBCommand(String command) {
-        String parts[] = command.split(" ");
-        if (parts.length != 3) {
-            System.err.println("Usage: CREATE DATABASE <db-name>");
-            return;
-        }
-        String dbName = parts[2];
-        dbManager.createDatabase(dbName);
     }
 
     private void processCreateTableCommand(String command) {
@@ -109,6 +99,16 @@ public class SGBD {
         dbManager.AddTableToCurrentDatabase(table);
     }
 
+    private void processCreateDBCommand(String command) {
+        String parts[] = command.split(" ");
+        if (parts.length != 3) {
+            System.err.println("Usage: CREATE DATABASE <db-name>");
+            return;
+        }
+        String dbName = parts[2];
+        dbManager.createDatabase(dbName);
+    }
+
     private void processSetDBCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
@@ -118,10 +118,10 @@ public class SGBD {
         String dbName = parts[2];
         dbManager.setCurrentDatabase(dbName);
     }
-    
+
     private void processListTablesCommand() {
         dbManager.ListTablesInCurrentDatabase();
-    }   
+    }
 
     private void processListDatabasesCommand() {
         dbManager.ListDatabases();
@@ -131,7 +131,7 @@ public class SGBD {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
             System.err.println("Usage: DROP TABLE <table-name>");
-            return ;
+            return;
         }
         String tableName = parts[2];
         dbManager.RemoveTableFromCurrentDatabase(tableName);
@@ -156,8 +156,6 @@ public class SGBD {
         diskManager.SaveState();
     }
 
-    //TP7
-
     private void processInsertIntoCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 5) {
@@ -168,7 +166,7 @@ public class SGBD {
         String values = parts[4].substring(parts[4].indexOf('(') + 1, parts[4].lastIndexOf(')')).trim();
         String[] valueParts = values.split(",");
         dbManager.InsertRecordIntoTable(tableName, valueParts);
-    }    
+    }
 
     private void processBulkInsertCommand(String command) {
         String[] parts = command.split(" ");
@@ -195,106 +193,33 @@ public class SGBD {
         }
     }
 
-
     private void processSelectCommand(String command) {
-        String parts[] = command.split(" ");
-
-        // Vérification du format général
-        if (parts.length < 5) {
+        String[] parts = command.split(" ");
+        if (parts.length < 4) {
             System.err.println("Usage: SELECT <table-alias>.<column-name1>,<table-alias>.<column-name2>,... FROM <table-name> <table-alias> [WHERE <condition1> AND <condition2> ...]");
             return;
         }
 
-        // Séparation des parties "SELECT" et "FROM"
+        // Colonnes à sélectionner (ne pas supprimer les alias)
         String columns = parts[1];
-        String fromClause = command.substring(command.indexOf("FROM") + 5).trim();
+        String[] columnNames = columns.split(",");
 
-        // **Traitement des requêtes sur une seule table**
-        if (!fromClause.contains(",")) {
-            String tableName = parts[3];
-            String[] columnNames = columns.split(",");
-            for (int i = 0; i < columnNames.length; i++) {
-                columnNames[i] = columnNames[i].substring(columnNames[i].indexOf('.') + 1);
+        // Récupérer les tables et leurs alias
+        String tableNames = parts[3]; // "R r,S s"
+
+        // Récupérer les conditions (si présentes)
+        String[] conditions = new String[0];
+        if (command.toUpperCase().contains("WHERE")) {
+            String condition = command.substring(command.indexOf("WHERE") + 6).trim();
+            conditions = condition.split("AND");
+            for (int i = 0; i < conditions.length; i++) {
+                conditions[i] = conditions[i].trim();
             }
-
-            String[] conditions = new String[0];
-            if (command.contains("WHERE")) {
-                String condition = command.substring(command.indexOf("WHERE") + 6).trim();
-                conditions = condition.split("AND");
-                for (int i = 0; i < conditions.length; i++) {
-                    conditions[i] = conditions[i].trim();
-                }
-            }
-
-            // Appel pour les requêtes mono-table
-            dbManager.SelectRecords(columnNames, tableName, conditions);
-            return;
         }
 
-        // **Traitement des requêtes avec jointure**
-        try {
-            // Découpage des relations et récupération des noms/alias
-            String[] relations = fromClause.split("WHERE")[0].trim().split(",");
-            if (relations.length != 2) {
-                System.err.println("Only two tables are supported for join operations.");
-                return;
-            }
-
-            // Récupération des relations et alias
-            String[] rel1Parts = relations[0].trim().split(" ");
-            String[] rel2Parts = relations[1].trim().split(" ");
-
-            if (rel1Parts.length != 2 || rel2Parts.length != 2) {
-                System.err.println("Each relation must have an alias (e.g., R r, S s).");
-                return;
-            }
-
-            String rel1Name = rel1Parts[0];
-            String alias1 = rel1Parts[1];
-            String rel2Name = rel2Parts[0];
-            String alias2 = rel2Parts[1];
-
-            // Charger les tables depuis le DBManager
-            Relation table1 = dbManager.getTableFromCurrentDatabase(rel1Name);
-            Relation table2 = dbManager.getTableFromCurrentDatabase(rel2Name);
-
-            if (table1 == null || table2 == null) {
-                System.err.println("One or both relations do not exist.");
-                return;
-            }
-
-            // Extraction des conditions WHERE
-            List<Condition> conditions = new ArrayList<>();
-            if (command.contains("WHERE")) {
-                String[] whereConditions = command.substring(command.indexOf("WHERE") + 6).trim().split("AND");
-                for (String cond : whereConditions) {
-                    conditions.add(new Condition(cond.trim(), table1.getColonnes(), table2.getColonnes()));
-                }
-            }
-
-            // Exécution de la jointure
-            PageOrientedJoinOperator joinOperator = new PageOrientedJoinOperator(table1, alias1, table2, alias2, conditions);
-
-// Combinaison des colonnes pour obtenir les index des colonnes combinées
-            List<ColInfo> colonnesJointes = new ArrayList<>(table1.getColonnes());
-            colonnesJointes.addAll(table2.getColonnes());
-
-            int[] colonnesindexes = new int[colonnesJointes.size()];
-            for (int i = 0; i < colonnesindexes.length; i++) {
-                colonnesindexes[i] = i; // Les index sont simplement les positions dans la liste combinée
-            }
-
-// Création du RecordPrinter
-            RecordPrinter printer = new RecordPrinter(joinOperator, colonnesJointes, colonnesindexes);
-            printer.printRecords();
-
-        } catch (Exception e) {
-            System.err.println("Error processing the join operation: " + e.getMessage());
-            e.printStackTrace();
-        }
+        // Appeler SelectRecords avec toutes les informations
+        dbManager.SelectRecords(columnNames, tableNames, conditions);
     }
-
-
 
     public static void main(String[] args) {
         // if (args.length != 1) {
@@ -307,5 +232,4 @@ public class SGBD {
         SGBD sgbd = new SGBD(dbConfig);
         sgbd.run();
     }
-    
 }

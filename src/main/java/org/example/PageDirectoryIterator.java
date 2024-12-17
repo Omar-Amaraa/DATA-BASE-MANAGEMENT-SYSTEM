@@ -1,53 +1,40 @@
 package org.example;
 
-import java.util.Iterator;
+import java.util.List;
 
-public class PageDirectoryIterator implements Iterator<PageId> {
-    private final Relation relation; // Relation associée
-    private final int fileIdx;       // Index du fichier
-    private int currentPageIndex;    // Index de la page courante
-    private final int totalPages;    // Nombre total de pages
+public class PageDirectoryIterator {
+    private final List<PageId> dataPages; // Liste des PageId des pages de données
+    private int currentPageIndex;        // Index actuel dans la liste des pages
+    private final BufferManager bm;// BufferManager pour libérer les pages
+    private final Relation relation;
+
 
     public PageDirectoryIterator(Relation relation) {
         this.relation = relation;
-        this.fileIdx = relation.getFileIndex(); // Obtenir l'index du fichier associé à la relation
-        this.currentPageIndex = 0;             // Débuter à la première page
-        this.totalPages = relation.getTotalPages(); // Nombre total de pages
+        this.dataPages = relation.getDataPages(); // Récupération des pages de données de la relation
+        this.currentPageIndex = -1;               // Commence avant la première page
+        this.bm = relation.getBufferManager();
     }
 
-    /**
-     * Retourne le prochain PageId ou null si plus aucune page.
-     */
     public PageId GetNextDataPageId() {
-        if (hasNext()) {
-            PageId pageId = new PageId(fileIdx, currentPageIndex);
+        if (currentPageIndex + 1 < dataPages.size()) {
             currentPageIndex++;
-            return pageId;
+            PageId currentPage = dataPages.get(currentPageIndex);
+            bm.FreePage(currentPage, false); // Libération de la page directory si nécessaire
+            return currentPage;
         }
-        return null;
+        return null; // Fin des pages
     }
 
-    @Override
-    public boolean hasNext() {
-        return currentPageIndex < totalPages;
-    }
-
-    @Override
-    public PageId next() {
-        return GetNextDataPageId();
-    }
-
-    /**
-     * Réinitialise l'itérateur à la première page.
-     */
     public void Reset() {
-        currentPageIndex = 0;
+        currentPageIndex = -1; // Réinitialise l'itérateur au début
     }
 
-    /**
-     * Libère les ressources associées (ici, réinitialise l'index).
-     */
     public void Close() {
-        Reset();
+        currentPageIndex = dataPages.size(); // Termine l'itération
+    }
+    public Relation getRelation() {
+        return this.relation;
     }
 }
+

@@ -1,20 +1,19 @@
-
 package org.example;
 
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 
-public class Relation {
+public class Relation implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String nomrelation;
     private int nbcolonnes;
-    private List<ColInfo> colonnes;
-    private PageId headerPageId;
-    private DiskManager diskManager;
-    private BufferManager bufferManager;
+    private final ArrayList<ColInfo> colonnes;
+    private final PageId headerPageId;
+    private final DiskManager diskManager;
+    private final BufferManager bufferManager;
 
     public Relation(String n, int nbcolonnes, DiskManager diskManager, BufferManager bufferManager) {
         this.nomrelation = n;
@@ -22,24 +21,34 @@ public class Relation {
         colonnes = new ArrayList<>();
         this.headerPageId = diskManager.AllocPage();
         Buffer headerBuffer = bufferManager.getPage(headerPageId);
-        headerBuffer.getContenu().putInt(0, 0);
+        headerBuffer.getContenu().putInt(0, 0); // nbDataPages
         headerBuffer.setDirtyFlag(true);
         bufferManager.FlushBuffers();
         this.diskManager = diskManager;
         this.bufferManager = bufferManager;
     }
-    
+    public PageId getHeaderPageId() {
+        return headerPageId;
+    }
 
     public String getNomrelation() {
         return nomrelation;
     }
 
-    public int getNbcolonnes() {
+    public int getNbColonnes() {
         return nbcolonnes;
     }
 
-    public List<ColInfo> getColonnes() {
+    public ColInfo getCol(int i) {
+        return colonnes.get(i);
+    }
+
+    public ArrayList<ColInfo> getColonnes() {
         return colonnes;
+    }
+
+    public BufferManager getBufferManager() {
+        return bufferManager;
     }
 
     public void setNomrelation(String nomrelation) {
@@ -54,45 +63,58 @@ public class Relation {
         colonnes.add(colInfo);
     }
 
-    public int writeRecordToBuffer(Record record, ByteBuffer buffer, int pos) {
+    public boolean hasColumn(String nomColonne) {
+        for (ColInfo colInfo : colonnes) {
+            if (colInfo.getNom().equals(nomColonne)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+    public int indexOfColumn(String nomColonne) {
+        for (int i = 0; i < colonnes.size(); i++) {
+            if (colonnes.get(i).getNom().equals(nomColonne)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int writeRecordToBuffer(Record record, ByteBuffer buffer, int pos) {
         int initialPos = pos;
         buffer.position(pos);
         for (int i = 0; i < colonnes.size(); i++) {
             ColInfo colInfo = colonnes.get(i);
             Object valeur = record.getValeurs().get(i);
-
             switch (colInfo.getType()) {
-                case INT:
-                    buffer.putInt(pos, Integer.parseInt(valeur.toString()));
+                case INT -> {
+                    buffer.putInt(pos, (int) valeur);
                     pos += Integer.BYTES;
-                    break;
-                case REAL:
-                    buffer.putFloat(pos, Float.parseFloat(valeur.toString()));
+                }
+                case REAL -> {
+                    buffer.putFloat(pos, (float) valeur);
                     pos += Float.BYTES;
-                    break;
-                case CHAR:
-                    String charValue = valeur.toString();
-                    for (int j = 0; j < colInfo.getTailleMax()-1; j++) {
+                }
+                case CHAR -> {
+                    String charValue = (String) valeur;
+                    for (int j = 0; j < colInfo.getTailleMax(); j++) {
                         char c = j < charValue.length() ? charValue.charAt(j) : '\0';
                         buffer.putChar(pos, c);
                         pos += Character.BYTES;
                     }
-                    buffer.putChar(pos, '\0');
-                    pos += Character.BYTES;
-                    break;
-                case VARCHAR:
-                    String varcharValue = valeur.toString();
-                    for (int j = 0; j < Math.min(colInfo.getTailleMax()-1,varcharValue.length()); j++) {
+                }
+                case VARCHAR -> {
+                    String varcharValue = (String) valeur;
+                    buffer.putInt(pos, varcharValue.length());
+                    pos += Integer.BYTES;
+                    for (int j = 0; j < varcharValue.length(); j++) {
                         buffer.putChar(pos, varcharValue.charAt(j));
                         pos += Character.BYTES;
                     }
-                    buffer.putChar(pos, '\0');
-                    pos += Character.BYTES;
-                    break;
+                }
             }
         }
-
         return pos - initialPos; // Taille totale écrite
     }
 
@@ -101,15 +123,15 @@ public class Relation {
         buffer.position(pos);
         for (ColInfo colInfo : colonnes) {
             switch (colInfo.getType()) {
-                case INT:
+                case INT -> {
                     record.ajouterValeur(buffer.getInt(pos));
                     pos += Integer.BYTES;
-                    break;
-                case REAL:
+                }
+                case REAL -> {
                     record.ajouterValeur(buffer.getFloat(pos));
                     pos += Float.BYTES;
-                    break;
-                case CHAR:
+                }
+                case CHAR -> {
                     StringBuilder charValue = new StringBuilder();
                     for (int i = 0; i < colInfo.getTailleMax(); i++) {
                         char c = buffer.getChar(pos);
@@ -117,151 +139,156 @@ public class Relation {
                         pos += Character.BYTES;
                     }
                     record.ajouterValeur(charValue.toString());
-                    break;
-                case VARCHAR:
+                }
+                case VARCHAR -> {
                     StringBuilder varcharValue = new StringBuilder();
-                    int count = 0;
-                    while (pos < buffer.limit() && count < colInfo.getTailleMax()) {
+                    int taille = buffer.getInt(pos);
+                    pos += Integer.BYTES;
+                    for (int i = 0; i < taille; i++) {
                         char c = buffer.getChar(pos);
                         varcharValue.append(c);
                         pos += Character.BYTES;
-                        count+= 1;
-                        if (c == '\0') {
-                            break;
-                        }
                     }
                     record.ajouterValeur(varcharValue.toString());
-                    break;
+                }
             }
         }
-        // if (pos - initialPos != taille) {
-        //     throw new RuntimeException("Erreur lors de la lecture du record");
-        // }
+
         return pos - initialPos; // Taille totale lue
     }
 
-    void addDataPage() {
-        try {
-            // Allouer une nouvelle page
-            PageId nouvPage = diskManager.AllocPage();
-            if (nouvPage == null) {
-                System.out.println("Erreur : L'allocation de la page a échoué.");
-                return;
-            }
+    // Ajoute une page de données à la relation
+    public void addDataPage() {
+        PageId nouvPage = diskManager.AllocPage();//Alloue une nouvelle page
+        Buffer buffHeaderPage=bufferManager.getPage(headerPageId);//Recupere la page depuis Buffer
+        ByteBuffer buff = buffHeaderPage.getContenu();
+        int nbPages = buff.getInt(0);
+        nbPages++;
+        buff.putInt(0,nbPages);//Met à jour le nombre de pages
+        buff.position(4 + 12*(nbPages-1));//Positionne le buffer pour écrire les infos de la nouvelle page
+        buff.putInt(nouvPage.getFileIdx());
+        buff.putInt(nouvPage.getPageIdx());
+        // taille libre de la page, -8 pour les 2 entiers de fin de page
+        buff.putInt(nouvPage.size()-8);
+        buffHeaderPage.setDirtyFlag(true);
 
-            // Mise à jour de l'en-tête de la page
-            Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
-            ByteBuffer buff = buffHeaderPage.getContenu();
-            int nbPages = buff.getInt(4);
-            buff.position(4);
-            buff.putInt(++nbPages);
-            buff.position(4 + 12 * (nbPages - 1));
-            buff.putInt(nouvPage.getFileIdx());
-            buff.putInt(nouvPage.getPageIdx());
-            buff.putInt(nouvPage.size());
-            buffHeaderPage.setContenu(buff);
-            buffHeaderPage.setDirtyFlag(true);
+        Buffer buffDataPage = bufferManager.getPage(nouvPage);
+        buff = buffDataPage.getContenu();
+        buff.position(nouvPage.size() - 8);
+        buff.putInt(0);// nb slots
+        buff.putInt(0);// pos debut libre
+        buffDataPage.setDirtyFlag(true);
 
-            // Initialisation de la nouvelle page de données
-            Buffer buffDataPage = bufferManager.getPage(nouvPage);
-            ByteBuffer dataBuff = buffDataPage.getContenu();
-            dataBuff.position(nouvPage.size() - 4);
-            dataBuff.putInt(0); // Position de début libre
-            dataBuff.position(nouvPage.size() - 8);
-            dataBuff.putInt(10); // Nombre initial de slots
-            buffDataPage.setDirtyFlag(true);
+        bufferManager.FlushBuffers();
 
-            // Sauvegarde des modifications
-            bufferManager.FlushBuffers();
-
-            System.out.println("Page de données ajoutée avec succès : " + nouvPage);
-
-        } catch (Exception e) {
-            System.err.println("Une erreur est survenue lors de l'ajout de la page de données : " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 
-
-    PageId getFreeDataPageId(int sizeRecord){
+    public PageId getFreeDataPageId(int sizeRecord){
         Buffer headerBuffer = bufferManager.getPage(headerPageId);
         ByteBuffer buff = headerBuffer.getContenu();
-        buff.position(4);
+        buff.position(0);
         int nbDataPages = buff.getInt();
         for(int i=0;i<nbDataPages;i++){
             buff.position(4+i*12);
             int fileIdx = buff.getInt();
             int pageIdx = buff.getInt();
-            int size = buff.getInt();
-            if(size - 8 - 8*buff.getInt(size - 8) >= sizeRecord){
+            int taillelibre = buff.getInt();
+            if(taillelibre >= sizeRecord+8){//+8 pour les 2 entiers(nb slot + position debut libre) de fin de page
                 return new PageId(fileIdx, pageIdx);
             }
         }
+        bufferManager.FreePage(headerPageId, false);
         return null;
     }
 
-    RecordId writeRecordToDataPage(Record record, PageId pageId) {
-
+    public RecordId writeRecordToDataPage(Record record, PageId pageId) {
         Buffer buffDataPage = bufferManager.getPage(pageId);
         ByteBuffer buff = buffDataPage.getContenu();
         int posDebutLibre = buff.getInt(pageId.size() - 4);// position de début libre pour écrire le record
         int sizeRecord = writeRecordToBuffer(record, buff, posDebutLibre);
         buff.putInt(pageId.size() - 4, posDebutLibre + sizeRecord); // Met à jour la position de début libre
         int nbSlots = buff.getInt(pageId.size() - 8);
-        buff.putInt(pageId.size() - 8, nbSlots - 1); // Met à jour le nombre de slots
-        buff.putInt(pageId.size() - 8 - 4 * nbSlots, posDebutLibre); // Met à jour la position du slot qui pointe vers le record
-        buff.putInt(pageId.size() - 8 - 8 * nbSlots, sizeRecord); // Met à jour la taille du slot
+        int slotidx = nbSlots;
+        nbSlots++;
+        buff.putInt(pageId.size() - 8, nbSlots); // Met à jour le nombre de slots
+        buff.position(pageId.size() - 8 - 8 * nbSlots);
+        buff.putInt(posDebutLibre); // Met à jour la position du slot qui pointe vers le record
+        buff.putInt(sizeRecord); // Met à jour la taille du slot
         buffDataPage.setDirtyFlag(true);
+
         Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
-        ByteBuffer conBuffer = buffHeaderPage.getContenu();
-        int nbDataPages = conBuffer.getInt(0);
+        buff = buffHeaderPage.getContenu();
+        int nbDataPages = buff.getInt(0);
         for(int i=0;i<nbDataPages;i++){
-            conBuffer.position(4+i*12);
-            int fileIdx = conBuffer.getInt();
-            int pageIdx = conBuffer.getInt();
+            buff.position(4+i*12);//Positionne le buffer pour recupérer l'info de DataPage
+            int fileIdx = buff.getInt();//Recupere le fileIdx de la page
+            int pageIdx = buff.getInt();//Recupere le pageIdx de la page
             if(fileIdx == pageId.getFileIdx() && pageIdx == pageId.getPageIdx()){
-                conBuffer.position(4+i*12+8);
-                int sizePage = conBuffer.getInt();
-                conBuffer.putInt(sizePage - sizeRecord);
+                int taillelibre = buff.getInt(4+i*12+8);//Recupere la taille libre de la page
+                buff.putInt(4+i*12+8,taillelibre - sizeRecord - 8);//Met à jour la taille libre de la page
                 buffHeaderPage.setDirtyFlag(true);
                 break;
             }
         }
+
         bufferManager.FlushBuffers();
 
-        return new RecordId(pageId, posDebutLibre);
-
+        return new RecordId(pageId, slotidx);
     }
-    List<Record> getRecordsInDataPage(PageId pageId){
-        List<Record> records = new ArrayList<>();
+
+
+    public ArrayList<Record> getRecordsInDataPage(PageId pageId){
+        ArrayList<Record> records = new ArrayList<>();
         Buffer buffDataPage = bufferManager.getPage(pageId);
         ByteBuffer buff = buffDataPage.getContenu();
-        int pos = 0;
-        int posDebutLibre = buff.getInt(pageId.size() - 4);
-        while(pos < posDebutLibre){
+        buff.position(pageId.size() - 8);
+        int nbSlots = buff.getInt();
+        int posDebutLibre = buff.getInt();
+        for (int i = 0; i < nbSlots; i++) {
+            buff.position(pageId.size() - 8 - 8 * (i + 1));
+            int posRecord = buff.getInt();
+            int sizeRecord = buff.getInt();
+            if (sizeRecord == 0 || posRecord == -1) {
+                continue;
+            }
+            if (posRecord + sizeRecord > posDebutLibre) {
+                throw new RuntimeException("Erreur lors de la lecture du record");
+            }
             Record record = new Record();
-            pos += readFromBuffer(record, buff, pos);
+            int byteread = readFromBuffer(record, buff, posRecord);
+            if (byteread != sizeRecord) {
+                throw new RuntimeException("Erreur lors de la lecture du record");
+            }
             records.add(record);
         }
+        bufferManager.FreePage(pageId, false);
         return records;
     }
-    RecordId InsertRecord (Record record)throws FileNotFoundException{
+
+    public ArrayList<PageId> getDataPages(){
+        ArrayList<PageId> dataPages = new ArrayList<>();
+        Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
+        ByteBuffer buff = buffHeaderPage.getContenu();
+        int nbDataPages = buff.getInt(0);
+        for(int i=0;i<nbDataPages;i++){
+            buff.position(4+i*12);
+            int fileIdx = buff.getInt();
+            int pageIdx = buff.getInt();
+            dataPages.add(new PageId(fileIdx, pageIdx));
+        }
+        bufferManager.FreePage(headerPageId, false);
+        return dataPages;
+    }
+
+    public RecordId insertRecord(Record record) {
         int sizeRecord = 0;
         int i = 0;
         for (ColInfo colInfo : colonnes) {
             switch (colInfo.getType()) {
-                case INT:
-                    sizeRecord += Integer.BYTES;
-                    break;
-                case REAL:
-                    sizeRecord += Float.BYTES;
-                    break;
-                case CHAR:
-                    sizeRecord += Character.BYTES * colInfo.getTailleMax();
-                    break;
-                case VARCHAR:
-                    sizeRecord += Character.BYTES * (((String) record.getValeurs().get(i)).length());
-                    break;
+                case INT -> sizeRecord += Integer.BYTES;
+                case REAL -> sizeRecord += Float.BYTES;
+                case CHAR -> sizeRecord += Character.BYTES * colInfo.getTailleMax();
+                case VARCHAR -> sizeRecord += Character.BYTES * (((String) record.getValeurs().get(i)).length());
             }
             i++;
         }
@@ -271,10 +298,10 @@ public class Relation {
             pageId = getFreeDataPageId(sizeRecord);
         }
         return writeRecordToDataPage(record, pageId);
-        
     }
-    List<Record> GetAllRecords(){
-        List<Record> records = new ArrayList<>();
+
+    public ArrayList<Record> GetAllRecords(){
+        ArrayList<Record> records = new ArrayList<>();
         Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
         ByteBuffer buff = buffHeaderPage.getContenu();
         int nbDataPages = buff.getInt(0);
@@ -288,6 +315,31 @@ public class Relation {
         return records;
     }
 
-}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            // if the same instance
+            return true;
+        }
+        if (obj instanceof Relation relation){
+            return this.nomrelation.equals(relation.getNomrelation());
+        }
+        return false;
+    }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(nomrelation);
+        sb.append(",nbcolonnes=").append(nbcolonnes);
+        sb.append(colonnes.toString());
+        return sb.toString();
+    }
+
+}
 
