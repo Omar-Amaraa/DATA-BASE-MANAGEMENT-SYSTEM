@@ -43,7 +43,7 @@ class BPlusTree {
             node = node.children.get(i);
         }
         // Debug: Print the leaf keys
-        System.out.println("findLeaf: Found leaf with keys: " + node.keys);
+        //System.out.println("findLeaf: Found leaf with keys: " + node.keys);
         return node;
     }
     @SuppressWarnings("unchecked")
@@ -170,22 +170,22 @@ class BPlusTree {
         }
 
         List<RecordId> result = new ArrayList<>();
-        System.out.println("search: Starting search for key: " + key);
+        //System.out.println("search: Starting search for key: " + key);
 
         // Traverse all linked leaf nodes
         while (leaf != null) {
-            System.out.println("search: Checking leaf with keys: " + leaf.keys);
+            //System.out.println("search: Checking leaf with keys: " + leaf.keys);
             for (int i = 0; i < leaf.keys.size(); i++) {
-                System.out.println("search: Comparing key: " + key + " with leaf key: " + leaf.keys.get(i));
+                //System.out.println("search: Comparing key: " + key + " with leaf key: " + leaf.keys.get(i));
                 if (key.equals(leaf.keys.get(i))) {
-                    System.out.println("search: Match found! RecordId: " + leaf.recordIds.get(i));
+                    //System.out.println("search: Match found! RecordId: " + leaf.recordIds.get(i));
                     result.add(leaf.recordIds.get(i));
                 }
             }
             leaf = leaf.next; // Move to the next linked leaf node
         }
 
-        System.out.println("search: Total matches found: " + result.size());
+        System.out.println("Total records " + result.size());
         return result;
     }
    

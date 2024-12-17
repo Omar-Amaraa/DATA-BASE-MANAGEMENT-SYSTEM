@@ -190,7 +190,7 @@ public class SGBD {
                 dbManager.InsertRecordIntoTable(tableName, values);
                 count++;
             }
-            System.out.println(count + " records inserted successfully");
+            //System.out.println(count + " records inserted successfully");
         } catch (IOException e) {
             System.err.println("Error reading csv file: " + e.getMessage());
         }
@@ -244,7 +244,7 @@ public class SGBD {
             return;
         }
         // Debug: Key being searched
-        System.out.println("Searching index for key: " + value);
+        //System.out.println("Searching index for key: " + value);
         // Rechercher dans l'index
         List<RecordId> matchingRecordIds = index.search(value);
 
@@ -254,11 +254,11 @@ public class SGBD {
         }
 
         // Afficher les records correspondants
-        Relation table = dbManager.getTableFromCurrentDatabase(relationName);
-        for (RecordId rid : matchingRecordIds) {
-            Record record = table.getRecordById(rid); // Ajoutez une méthode pour récupérer un record via RecordId
-            System.out.println(record.getValeurs());
-        }
+        // Relation table = dbManager.getTableFromCurrentDatabase(relationName);
+        // for (RecordId rid : matchingRecordIds) {
+        //     Record record = table.getRecordById(rid); // Ajoutez une méthode pour récupérer un record via RecordId
+        //     System.out.println(record.getValeurs());
+        // }
     }
 
 
