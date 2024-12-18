@@ -18,9 +18,9 @@ public class Relation implements Serializable {
     private String nomrelation;
     private int nbcolonnes;
     private final List<ColInfo> colonnes;
-    private final transient PageId headerPageId;
-    private final transient DiskManager diskManager;
-    private final transient BufferManager bufferManager;
+    private final PageId headerPageId;
+    private transient DiskManager diskManager;
+    private transient BufferManager bufferManager;
 
     /**
      * Constructeur de Relation.
@@ -90,7 +90,13 @@ public class Relation implements Serializable {
     public BufferManager getBufferManager() {
         return bufferManager;
     }
-   /**
+    public void setBufferManager(BufferManager bufferManager) {
+        this.bufferManager = bufferManager;
+    }
+    public void setDiskManager(DiskManager diskManager) {
+        this.diskManager = diskManager;
+    }
+    /**
     * Set le nom de la relation.
     * @param nomrelation
     */

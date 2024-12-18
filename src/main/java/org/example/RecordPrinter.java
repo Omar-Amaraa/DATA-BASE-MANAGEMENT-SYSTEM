@@ -51,8 +51,12 @@ public class RecordPrinter {
                         case CHAR, VARCHAR -> System.out.print("\"" + record.getValeurs().get(i) + "\" ; ");
                     }
                 }
+                System.out.println();
             }
-            System.out.println();
+            if (count == 30) {
+                System.out.println("...");
+            }
+            
         }
         System.out.println("Total records: " + count);
     }

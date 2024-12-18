@@ -9,7 +9,7 @@ public class PageId  implements Serializable {
 
     private final int fileIdx; // index du fichier
     private final int pageIdx; // index de la page
-    private final DBConfig dbConfig;
+    private final int size;
     /**
      * Constructeur de la classe PageId
      * @param fileIdx 
@@ -18,7 +18,7 @@ public class PageId  implements Serializable {
     public PageId(int fileIdx, int pageIdx) {
         this.fileIdx = fileIdx;
         this.pageIdx = pageIdx;
-        dbConfig = DBConfig.LoadDBConfig("./files/dataset_1.json");
+        this.size = DBConfig.getPagesize();
     }
     /**
      * Methode permettant de recuperer l'index du fichier
@@ -66,7 +66,7 @@ public class PageId  implements Serializable {
      * Methode permettant de recuperer la taille d'une page
      */
     public int size() {
-        return dbConfig.getPagesize();
+        return this.size;
     }
     
     

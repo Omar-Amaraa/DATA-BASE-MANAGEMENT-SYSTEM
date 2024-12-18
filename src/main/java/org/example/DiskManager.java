@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -20,8 +19,7 @@ import java.util.Stack;
  * 
  * Auteur: CHAU Thi, Zineb Fennich, Omar AMARA
  */
-public class DiskManager implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class DiskManager {
     private static DBConfig dbConfiginstance;
     private static Stack<PageId> freePages = new Stack<>();
     private static int countFiles = 0;
@@ -43,7 +41,7 @@ public class DiskManager implements Serializable {
      * @return Le nombre de fichiers rsdb.
      */
     public static int countRSDBFiles() {
-        File file = new File("./BinData");
+        File file = new File(DBConfig.getDbpath());
         File[] files = file.listFiles();
         int count = 0;
         for (File f : files) {
@@ -60,7 +58,7 @@ public class DiskManager implements Serializable {
      * @return Le fichier binaire vide.
      */
     public static File createEmptyFile() {
-        String path = "./BinData" + "/F" + countFiles+".rsdb";
+        String path = DBConfig.getDbpath() + "/F" + countFiles+".rsdb";
         // Créer une instance File avec le chemin spécifié
         File file = null;
         if (!Files.exists(Paths.get(path))) {
@@ -91,28 +89,28 @@ public class DiskManager implements Serializable {
         }
         if (countFiles == 0) {
             createEmptyFile();
-            try (RandomAccessFile raf = new RandomAccessFile("./BinData/F" + (countFiles - 1) + ".rsdb","rw" )) {
-                raf.setLength(dbConfiginstance.getPagesize());
+            try (RandomAccessFile raf = new RandomAccessFile(DBConfig.getDbpath() + "/F" + (countFiles - 1) + ".rsdb","rw" )) {
+                raf.setLength(DBConfig.getPagesize());
                 // raf.close();
             } catch (IOException e) {
                 System.err.println("Error set file F" + (countFiles - 1) + ".rsdb length:" + e.getMessage());
             }
             return new PageId(countFiles-1 , 0);
         }
-        File currentFile = new File("./BinData" + "/F" + (countFiles-1) + ".rsdb");
-        if (!currentFile.exists() || currentFile.length() >= dbConfiginstance.getDm_maxfilesize()) {
+        File currentFile = new File(DBConfig.getDbpath() + "/F" + (countFiles-1) + ".rsdb");
+        if (!currentFile.exists() || currentFile.length() >= DBConfig.getDm_maxfilesize()) {
             createEmptyFile();
-            try (RandomAccessFile raf = new RandomAccessFile("./BinData/F" + (countFiles - 1) + ".rsdb","rw" )) {
-                raf.setLength(dbConfiginstance.getPagesize());
+            try (RandomAccessFile raf = new RandomAccessFile(DBConfig.getDbpath() + "/F" + (countFiles - 1) + ".rsdb","rw" )) {
+                raf.setLength(DBConfig.getPagesize());
                 // raf.close();
             } catch (IOException e) {
                 System.err.println("Error set file F" + (countFiles - 1) + ".rsdb length: " + e.getMessage());
             }
             return new PageId(countFiles -1, 0);
         } else {
-            int idPage = ((int) Math.ceil(currentFile.length() / dbConfiginstance.getPagesize()));
-            try (RandomAccessFile raf = new RandomAccessFile("./BinData/F" + (countFiles - 1) + ".rsdb","rw" )) {
-                raf.setLength(dbConfiginstance.getPagesize() * (idPage + 1));
+            int idPage = ((int) Math.ceil(currentFile.length() / DBConfig.getPagesize()));
+            try (RandomAccessFile raf = new RandomAccessFile(DBConfig.getDbpath() + "/F" + (countFiles - 1) + ".rsdb","rw" )) {
+                raf.setLength(DBConfig.getPagesize() * (idPage + 1));
                 // raf.close();
             } catch (IOException e) {
                 System.err.println("Error increase file F" + (countFiles - 1) + ".rsdb length: " + e.getMessage());
@@ -133,7 +131,7 @@ public class DiskManager implements Serializable {
      * Méthode pour sauvegarder l'état des pages libres dans un fichier.
      */
     public void SaveState() {
-        File saveFile = new File(dbConfiginstance.getDbpath() + "/dm.save");
+        File saveFile = new File(DBConfig.getDbpath() + "/dm.save");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(saveFile))) {
             oos.writeObject(freePages);
         } catch (IOException e) {
@@ -146,7 +144,7 @@ public class DiskManager implements Serializable {
      */
     @SuppressWarnings("unchecked")
     public final void LoadState() {
-        File saveFile = new File(dbConfiginstance.getDbpath() + "/dm.save");
+        File saveFile = new File(DBConfig.getDbpath() + "/dm.save");
         if (saveFile.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(saveFile))) {
                 Object obj = ois.readObject();
@@ -178,10 +176,10 @@ public class DiskManager implements Serializable {
      * @return Le nombre d'octets lus.
      */
     public int ReadPage(PageId p, ByteBuffer buff) {
-        String path = "./BinData/" + "F" + p.getFileIdx() + ".rsdb";
+        String path = DBConfig.getDbpath() + "/F" + p.getFileIdx() + ".rsdb";
         try (RandomAccessFile raf = new RandomAccessFile(path, "r");
              FileChannel fileChannel = raf.getChannel()) {
-            long pageOffset = p.getPageIdx() * dbConfiginstance.getPagesize();
+            long pageOffset = p.getPageIdx() * DBConfig.getPagesize();
             fileChannel.position(pageOffset);
             buff.rewind();
             int bytesRead = fileChannel.read(buff);
@@ -191,7 +189,8 @@ public class DiskManager implements Serializable {
             }
             return bytesRead;
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            System.out.println("Error reading page " + path + ": " + e.getMessage());
             return -1;
         }
     }
@@ -207,13 +206,10 @@ public class DiskManager implements Serializable {
         try (RandomAccessFile raf = new RandomAccessFile(path, "rw");
              FileChannel fileChannel = raf.getChannel()) {
             buff.rewind();
-            fileChannel.write(buff, p.getPageIdx() * dbConfiginstance.getPagesize());
+            fileChannel.write(buff, p.getPageIdx() * DBConfig.getPagesize());
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            System.out.println("Error writing page " + path + ": " + e.getMessage());
         }
     }
 }
-
-
-
-

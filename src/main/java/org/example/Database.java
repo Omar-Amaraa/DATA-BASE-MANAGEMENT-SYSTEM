@@ -13,8 +13,8 @@ import java.util.ArrayList;
 public class Database implements Serializable {
     private static final long serialVersionUID = 1L;
     private String nom;
-    private final DiskManager dm;
-    private final BufferManager bm;
+    private transient DiskManager dm;
+    private transient BufferManager bm;
     private final ArrayList<Relation> tables = new ArrayList<>();
 
     /**
@@ -41,6 +41,20 @@ public class Database implements Serializable {
      */
     public void setNom(String nom) {
         this.nom = nom;
+    }
+
+    public void setBufferManager(BufferManager bm) {
+        this.bm = bm;
+        for (Relation tab : tables) {
+            tab.setBufferManager(bm);
+        }
+    }
+
+    public void setDiskManager(DiskManager dm) {
+        this.dm = dm;
+        for (Relation tab : tables) {
+            tab.setDiskManager(dm);
+        }
     }
     /**
     * Ajouter une table à la base de données

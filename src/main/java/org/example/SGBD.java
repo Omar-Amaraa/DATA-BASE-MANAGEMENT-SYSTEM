@@ -25,9 +25,9 @@ public class SGBD {
      */
     public SGBD(DBConfig dbConfig) {
         this.dbConfig = dbConfig;
-        this.diskManager = new DiskManager(dbConfig);
-        this.bufferManager = new BufferManager(dbConfig, diskManager);
-        this.dbManager = new DBManager(dbConfig, diskManager, bufferManager);
+        this.diskManager = new DiskManager(this.dbConfig);
+        this.bufferManager = new BufferManager(this.dbConfig, diskManager);
+        this.dbManager = new DBManager(this.dbConfig, diskManager, bufferManager);
     }
     /**
      * Méthode pour traiter les commandes de l'utilisateur
@@ -416,20 +416,20 @@ public class SGBD {
         String columnName = parts[3].split("=")[1];
         int order = Integer.parseInt(parts[4].split("=")[1]);
 
-        // Get the Relation object
+        // Recupérer la relation
         Relation relation = dbManager.getTableFromCurrentDatabase(relationName);
         if (relation == null) {
             System.err.println("Relation " + relationName + " not found.");
             return;
         }
 
-        // Check if the column exists in the relation
+        // Verifier si la colonne existe
         if (!relation.hasColumn(columnName)) {
             System.err.println("Column " + columnName + " not found in relation " + relationName);
             return;
         }
 
-        // Get all records and record IDs from the relation
+        // Récupérer les records et les recordIds
         List<Record> records = relation.GetAllRecords();
         List<RecordId> recordIds = relation.GetAllRecordIds();
 
@@ -442,11 +442,12 @@ public class SGBD {
      * Méthode principale pour lancer le programme avec un fichier de configuration
      */
     public static void main(String[] args) {
-        if (args.length != 1) {
-             System.err.println("Usage: java SGBD <config-file-path>");
-             System.exit(1);
-        }
-        String configFilePath = args[0];
+        // if (args.length != 1) {
+        //      System.err.println("Usage: java SGBD <config-file-path>");
+        //      System.exit(1);
+        // }
+        
+        String configFilePath = "configDB.json";
         DBConfig dbConfig = new DBConfig(configFilePath);
         SGBD sgbd = new SGBD(dbConfig);
         sgbd.run();

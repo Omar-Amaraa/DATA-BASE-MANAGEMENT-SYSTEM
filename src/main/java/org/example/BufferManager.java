@@ -1,5 +1,4 @@
 package org.example;
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 /**
@@ -10,8 +9,7 @@ import java.util.List;
  * 
  * Auteur: CHAU Thi, Zineb Fennich, Omar AMARA
  */
-public class BufferManager implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class BufferManager {
     private static DBConfig dbConfiginstance;
     private static DiskManager diskManager;
     private static final List<Buffer> bufferPool = new LinkedList<>();
@@ -56,12 +54,11 @@ public class BufferManager implements Serializable {
         
         
         // Si la taille du buffer est atteinte, on doit remplacer une page
-        if (bufferPool.size() >= dbConfiginstance.getBm_buffercount()) {
-            Buffer removedBuffer;
-            if (dbConfiginstance.getBm_policy().equals("LRU")) {
-                removedBuffer = bufferPool.removeLast();
+        if (bufferPool.size() >= DBConfig.getBm_buffercount()) {
+            if (DBConfig.getBm_policy().equals("LRU")) {
+                bufferPool.removeLast();
             } else {
-                removedBuffer = bufferPool.removeFirst();
+                bufferPool.removeFirst();
             }
         }
         return retbuffer;
@@ -110,10 +107,10 @@ public class BufferManager implements Serializable {
      * @param policy : politique de remplacement
      */
     public void setCurrentReplacementPolicy(String policy){ 
-        if(policy.equals(dbConfiginstance.getBm_policy())){
+        if(policy.equals(DBConfig.getBm_policy())){
             // Si la politique est la même, on ne fait rien
         } else {
-            dbConfiginstance.setBm_policy(policy);
+            DBConfig.setBm_policy(policy);
         }
     }
     /**

@@ -31,8 +31,10 @@ public class DBManager {
         this.dm = dm;
         this.bm = bm;
         this.indexManager = new DBIndexManager();//Omar AMARA 12/16/2024
-        this.databases = new HashMap<>();
         this.LoadState();
+        if (this.databases == null) {
+            this.databases = new HashMap<>();
+        }
     }
     /**
      * Fonction pour créer une base de données
@@ -148,10 +150,10 @@ public class DBManager {
      * Fonction pour enregistrer l'état des bases de données
      */
     public void SaveState() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(config.getDbpath() + "/databases.save"))) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(DBConfig.getDbpath() + "/databases.save"))) {
             oos.writeObject(this.databases);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error saving databases");
         }
     }
 
@@ -160,16 +162,22 @@ public class DBManager {
      */
     @SuppressWarnings("unchecked")
     public final void LoadState() {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(config.getDbpath() + "/databases.save"))) {
+        //verifier si le fichier existe
+        //pour le debut, il va afficher un message " No database to load"
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(DBConfig.getDbpath() + "/databases.save"))) {
             Object obj = ois.readObject();
             if (obj instanceof Map) {
                 this.databases = (Map<String, Database>) obj;
-            }
-            if (!this.databases.isEmpty()) {
-                this.courammentDatabase = this.databases.values().iterator().next();
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+                for (Database db : this.databases.values()) {
+                    db.setDiskManager(this.dm);
+                    db.setBufferManager(this.bm);
+                }
+            } 
+        } catch (IOException e) {
+            System.out.println("No database to load");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Error loading databases");
+           
         }
     }
     /**
@@ -207,7 +215,7 @@ public class DBManager {
         if (this.courammentDatabase == null) {
            System.out.println("No database selected");
         }
-        String tableName = table.trim().split(" ")[0];
+        String tableName = table.trim();
         Relation tab = this.courammentDatabase.getTable(courammentDatabase.indexOfTable(tableName));
         if (tab == null) {
             System.out.println("Database " + table + " does not exist");
@@ -234,7 +242,7 @@ public class DBManager {
                 }
             }
         }
-        Condition[] conds = null;
+        Condition[] conds;
         if (conditions != null) {
             conds = new Condition[conditions.length];
             for (int i = 0; i < conditions.length; i++) {
@@ -302,7 +310,7 @@ public class DBManager {
                 }
             }
         }
-        Condition[] conds = null;
+        Condition[] conds;
         if (conditions != null) {
             conds = new Condition[conditions.length];
             for (int i = 0; i < conditions.length; i++) {

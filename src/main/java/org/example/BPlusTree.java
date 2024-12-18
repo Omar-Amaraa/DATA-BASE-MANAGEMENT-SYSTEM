@@ -195,7 +195,6 @@ class BPlusTree {
                 key = Integer.parseInt(keyStr);
             } catch (NumberFormatException e) {
                 // Clé n'est pas un entier
-                System.out.println("Treating key as String: " + key);
             }
         }
 
@@ -211,7 +210,6 @@ class BPlusTree {
         while (leaf != null) {
             for (int i = 0; i < leaf.keys.size(); i++) {// Parcourir les clés du noeud feuille
                 if (key.equals(leaf.keys.get(i))) {//Comparer la clé avec la clé actuelle
-                    System.out.println("search: Match found! RecordId: " + leaf.recordIds.get(i));
                     result.add(leaf.recordIds.get(i));
                 }
             }

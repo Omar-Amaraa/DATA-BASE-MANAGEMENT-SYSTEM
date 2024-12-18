@@ -20,7 +20,7 @@ public class PageDirectoryIterator {
         this.relation = relation;
         this.bm = this.relation.getBufferManager();
         this.headerPageId = this.relation.getHeaderPageId();
-        Buffer headerBuffer = bm.getPage(this.headerPageId);
+        Buffer headerBuffer = this.bm.getPage(this.headerPageId);
         this.numDataPages = headerBuffer.getContenu().getInt(0);
         bm.FreePage(this.headerPageId, false); // Libération de la page header
         this.currentPageIndex = -1;               // Commence avant la première page
