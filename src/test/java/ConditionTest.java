@@ -5,6 +5,7 @@ import java.util.List;
 import org.example.ColInfo;
 import org.example.ColType;
 import org.example.Condition;
+import org.example.Record;
 
 
 public class ConditionTest {
@@ -20,20 +21,20 @@ public class ConditionTest {
         List<Object> record1 = new ArrayList<>();
         record1.add(5);
         record1.add("test");
-        condition = new Condition("table1.col1 = 5", colonnes, colInfos);
-        System.out.println(condition.evaluate(new org.example.Record(record1)));//true
+        condition = new Condition("table1.col1=5", colonnes, colInfos);
+        System.out.println(condition.evaluate(new Record(record1)));//true
         List<Object> record3 = new ArrayList<>();
         record3.add(5);
         record3.add("test");
         record3.add(5);
         record3.add("test");
-        System.out.println(condition.evaluate(new org.example.Record(record3)));//incompatible tyes error
-        condition = new Condition("table1.col2 = 'test'", colonnes, colInfos);//error car il y a pas alias pour test
-        System.out.println(condition.evaluate(new org.example.Record(record1)));// false
-        condition = new Condition("table1.col1 = table2.col1", colonnes, colInfos);
-        System.out.println(condition.evaluate(new org.example.Record(record3)));//true
-        condition = new Condition("table1.col2 = table2.col2", colonnes, colInfos);
-        System.out.println(condition.evaluate(new org.example.Record(record3)));//true
+        System.out.println(condition.evaluate(new Record(record3)));//incompatible tyes error
+        condition = new Condition("table1.col2='test'", colonnes, colInfos);//error car il y a pas alias pour test
+        System.out.println(condition.evaluate(new Record(record1)));// false
+        condition = new Condition("table1.col1=table2.col1", colonnes, colInfos);
+        System.out.println(condition.evaluate(new Record(record3)));//true
+        condition = new Condition("table1.col2=table2.col2", colonnes, colInfos);
+        System.out.println(condition.evaluate(new Record(record3)));//true
     }
 
     public static void main(String[] args) {

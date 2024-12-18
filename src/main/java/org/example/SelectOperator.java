@@ -3,7 +3,7 @@ package org.example;
  * Classe SelectOperator qui permet de sélectionner les enregistrements qui satisfont une condition donnée
  */
 public class SelectOperator implements IRecordIterator {
-    private final IRecordIterator operatorFil;
+    private final IRecordIterator operatorFil; //RelationScanner ou PageOrientedJoinOperator
     private final Condition[] conditions;
     private Record currentRecord;
     private Record nextRecord;
