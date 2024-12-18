@@ -5,7 +5,7 @@ import java.util.List;
 
 public class RelationScanner implements IRecordIterator {
     private final Relation relation;//Relation à scanner
-    private final BufferManager bm;
+    private final BufferManager bm;   
     private final List<PageId> dataPages;//Liste des pages de données de la relation
     private final int numDataPages;//Nombre de pages de données
     private int currentDataPageIndex;//Index de la page de données courante
@@ -31,10 +31,6 @@ public class RelationScanner implements IRecordIterator {
         this.currentRecordIndex = 0;
     }
 
-    // Ajoute cette méthode pour résoudre l'erreur
-    public Relation getRelation() {
-        return this.relation;
-    }
     @Override
     public boolean hasNext() {
         if (isClosed) {
@@ -104,7 +100,7 @@ public class RelationScanner implements IRecordIterator {
         currentDataPageIndex = -1;
         isClosed = true;
     }
-
+    
     @Override
     public void Reset() {
         if (currentDataPageIndex >= 0) {

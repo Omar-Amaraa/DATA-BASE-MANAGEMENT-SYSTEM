@@ -6,18 +6,12 @@ public class ProjectOperator implements IRecordIterator {
     private Record currentRecord;
     private Record nextRecord;
 
-    // Constructeur pour MONO-TABLE
     public ProjectOperator(Relation relation, int[] colonnesindexes, Condition[] condition) {
+        super();
         this.operatorFil = new SelectOperator(relation, condition);
         this.colonnesindexes = colonnesindexes;
     }
-
-    // Constructeur pour DEUX TABLES (jointure)
-    public ProjectOperator(Relation relation1, Relation relation2, int[] colonnesindexes, Condition[] condition) {
-        this.operatorFil = new SelectOperator(relation1, relation2, condition);
-        this.colonnesindexes = colonnesindexes;
-    }
-
+    
     @Override
     public boolean hasNext() {
         if (nextRecord != null && currentRecord != nextRecord) {
@@ -52,11 +46,13 @@ public class ProjectOperator implements IRecordIterator {
         currentRecord = null;
         nextRecord = null;
     }
-
+    
     @Override
     public void Reset() {
         operatorFil.Reset();
         currentRecord = null;
         nextRecord = null;
     }
+
+    
 }

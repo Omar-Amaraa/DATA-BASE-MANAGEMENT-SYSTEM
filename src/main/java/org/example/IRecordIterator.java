@@ -2,7 +2,7 @@ package org.example;
 
 import java.util.Iterator;
 
-public interface IRecordIterator extends Iterator<Record> {
+public interface IRecordIterator extends Iterator<Record> {    
     default Record GetNextRecord() {
         return this.next();
     }

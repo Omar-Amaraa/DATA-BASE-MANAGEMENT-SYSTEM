@@ -30,26 +30,14 @@ public class Record {
     public void ajouterValeur(Object valeur) {
         valeurs.add(valeur);
     }
-    private List<ColInfo> colonnes;
-
-
-
-    public void deserialize(ByteBuffer buffer, int offset) {
-        this.valeurs.clear();
-        buffer.position(offset); // Déplacer à la position spécifiée
-        for (ColInfo col : this.colonnes) {
-            switch (col.getType()) {
-                case INT -> this.valeurs.add(buffer.getInt());
-                case REAL -> this.valeurs.add(buffer.getFloat());
-                case CHAR, VARCHAR -> {
-                    byte[] strBytes = new byte[col.getTailleMax()];
-                    buffer.get(strBytes);
-                    this.valeurs.add(new String(strBytes).trim());
-                }
-            }
+    @Override
+    public String toString() {
+        String resultat="";
+        for (Object valeur : valeurs) {
+            resultat+=valeur+" ; ";
         }
+        return resultat;
     }
-
 
 }
 

@@ -47,3 +47,4 @@ public class RecordPrinter {
         System.out.println("Total records: " + records.length);
     }
 }
+

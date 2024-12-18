@@ -1,21 +1,29 @@
-package org.example;
-
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.example.BufferManager;
+import org.example.ColInfo;
+import org.example.ColType;
+import org.example.DBConfig;
+import org.example.DiskManager;
+import org.example.PageId;
+import org.example.Record;
+import org.example.RecordId;
+import org.example.Relation;
+
 public class RelationTest {
-    static DBConfig config = DBConfig.LoadDBConfig("./files/dataset_1.json");
-    static DiskManager dm = new DiskManager(config);
+    static final DBConfig config = DBConfig.LoadDBConfig("./files/dataset_1.json");
+    static final DiskManager dm = new DiskManager(config);
     static BufferManager bm = new BufferManager(config, dm);
 
     // Méthode pour créer une relation "Personnes"
-    public static Relation createRelation() {
+    public static Relation createRelation(String nom, int nbCol) {
         
-        Relation relation = new Relation("Personnes", 4,dm,bm );
+        Relation relation = new Relation(nom, nbCol, dm, bm);
         relation.ajouterColonne(new ColInfo("ID", ColType.INT));
-        relation.ajouterColonne(new ColInfo("Nom", ColType.VARCHAR, 50));
-        relation.ajouterColonne(new ColInfo("Age", ColType.INT));
+        relation.ajouterColonne(new ColInfo("Nom", ColType.VARCHAR, 40));
         relation.ajouterColonne(new ColInfo("Prenom", ColType.VARCHAR, 50));
+        relation.ajouterColonne(new ColInfo("Age", ColType.REAL));
         System.out.println("Relation créée : " + relation);
         return relation;
     }
@@ -63,20 +71,21 @@ public class RelationTest {
     // Méthode principale pour effectuer tous les tests
     public static void testRelation() {
         // Création de la relation
-        Relation relation = createRelation();
+        Relation relation = createRelation("Personnes", 4);
+        // // Allocation d'un buffer
+        // ByteBuffer buffer = ByteBuffer.allocate(1024);
 
-        // Allocation d'un buffer
-        //ByteBuffer buffer = ByteBuffer.allocate(1024);
+        // // Création et écriture du premier record
+        // Record record1 = new Record();
+        // record1.ajouterValeur(123);
+        // record1.ajouterValeur("Alice");
+        // record1.ajouterValeur("Bob");
+        // record1.ajouterValeur((float) 18.5);
+        // testWriteRecord(relation, record1, buffer, 0);
 
-        // Création et écriture du premier record
-        //Record record1 = new Record();
-        //record1.ajouterValeur(123);
-        //record1.ajouterValeur("Alice");
-        //testWriteRecord(relation, record1, buffer, 0);
-
-        // Lecture du premier record
-        //Record recordLu1 = new Record();
-        //testReadRecord(relation, recordLu1, buffer, 0);
+        // // Lecture du premier record
+        // Record recordLu1 = new Record();
+        // testReadRecord(relation, recordLu1, buffer, 0);
 
         // Mise à jour de la position pour le second record
         //int pos2 = 16; // La position après avoir écrit le premier record
@@ -100,17 +109,23 @@ public class RelationTest {
             relation.addDataPage();
             Record record = new Record();
             record.ajouterValeur(123);
-            record.ajouterValeur("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-            record.ajouterValeur(18);
+            record.ajouterValeur("ABS");
             record.ajouterValeur("Alice");
+            record.ajouterValeur((float)18.5);
+            Record record2 = new Record();
+            record2.ajouterValeur(376);
+            record2.ajouterValeur("Bob");
+            record2.ajouterValeur("Ange");
+            record2.ajouterValeur((float)20.8);
             //writeRecordToDataPage(record,relation);
             //testgetRecordsInDataPage(p,relation);
             testInsertRecord(relation,record);
+            testInsertRecord(relation,record2);
             testGetAllRecords(relation);
         } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            System.err.println("An error occurred: " + e.getMessage());
+        }
+    }
 
 
     // Méthode principale qui lance les tests

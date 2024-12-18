@@ -5,7 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DBManager {
     private final DiskManager dm;
@@ -13,12 +14,13 @@ public class DBManager {
     private final DBConfig config;
     private Map<String, Database> databases;
     private Database courammentDatabase;
-
+    private final DBIndexManager indexManager;//Omar AMARA 12/16/2024
 
     public DBManager(DBConfig config, DiskManager dm, BufferManager bm) {
         this.config = config;
         this.dm = dm;
         this.bm = bm;
+        this.indexManager = new DBIndexManager();//Omar AMARA 12/16/2024
         this.databases = new HashMap<>();
         this.LoadState();
     }
@@ -26,7 +28,7 @@ public class DBManager {
     public void createDatabase(String nom) {
         if (this.databases.containsKey(nom)) {
             throw new IllegalArgumentException("La base de données " + nom + " existe déjà");
-
+            
         }
         Database db = new Database(nom, this.dm, this.bm);
         this.databases.put(nom, db);
@@ -45,14 +47,12 @@ public class DBManager {
         }
         this.courammentDatabase.addTable(tab);
     }
-
     public Relation getTableFromCurrentDatabase(String nomTable) {
         if (this.courammentDatabase == null) {
             throw new IllegalArgumentException("Aucune base de données n'est sélectionnée");
         }
         return this.courammentDatabase.getTable(courammentDatabase.indexOfTable(nomTable));
     }
-
     public void RemoveTableFromCurrentDatabase(String nomTable) {
         if (this.courammentDatabase == null) {
             throw new IllegalArgumentException("Aucune base de données n'est sélectionnée");
@@ -64,11 +64,11 @@ public class DBManager {
         if (!this.databases.containsKey(nomBdd)) {
             throw new IllegalArgumentException("La base de données " + nomBdd + " n'existe pas");
         }
-        Database deleteddb = databases.get(nomBdd);
-        if (this.courammentDatabase != null && this.courammentDatabase == deleteddb) {
+        Database deteleddb = databases.get(nomBdd);
+        if (this.courammentDatabase != null && this.courammentDatabase == deteleddb) {
             this.courammentDatabase = null;
         }
-        deleteddb.removeAllTables();
+        deteleddb.removeAllTables();
         this.databases.remove(nomBdd);
     }
 
@@ -114,6 +114,7 @@ public class DBManager {
         }
     }
 
+    
     @SuppressWarnings("unchecked")
     public final void LoadState() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(config.getDbpath() + "/databases.save"))) {
@@ -150,150 +151,41 @@ public class DBManager {
         }
         tab.insertRecord(record);
     }
-    private Relation getTableWithAlias(String tableWithAlias) {
-        String[] parts = tableWithAlias.split(" ");
-        String tableName = parts[0];
-        String alias = (parts.length > 1) ? parts[1].toLowerCase() : tableName.toLowerCase();
-
-        Relation table = this.courammentDatabase.getTable(courammentDatabase.indexOfTable(tableName));
-        if (table == null) {
-            throw new IllegalArgumentException("Table inconnue : " + tableName);
-        }
-
-        // Appliquer l'alias aux colonnes
-        table.getColonnes().forEach(col -> col.setAlias(alias));
-        return table;
-    }
-    public void SelectRecords(String[] columnNames, String tableNames, String[] conditions) {
+    
+    public void SelectRecords(String[] columnNames, String tableName, String[] conditions) {
         if (this.courammentDatabase == null) {
             throw new IllegalArgumentException("Aucune base de données n'est sélectionnée");
         }
-
-        String[] tablesWithAlias = tableNames.split(",");
-        Relation table1 = getTableWithAlias(tablesWithAlias[0].trim());
-        List<ColInfo> colonnes1 = table1.getColonnes();
-
-        Relation table2 = null;
-        List<ColInfo> colonnes2 = null;
-
-        // Gestion de la deuxième table si présente (jointure)
-        if (tablesWithAlias.length > 1) {
-            table2 = getTableWithAlias(tablesWithAlias[1].trim());
-            colonnes2 = table2.getColonnes();
+        Relation tab = this.courammentDatabase.getTable(courammentDatabase.indexOfTable(tableName));
+        if (tab == null) {
+            throw new IllegalArgumentException("La table " + tableName + " n'existe pas");
         }
-
-        // Fusion des colonnes pour les jointures
-        List<ColInfo> allColumns = new ArrayList<>(colonnes1);
-        if (colonnes2 != null) {
-            allColumns.addAll(colonnes2);
-        }
-
-        // Résolution des index des colonnes
-        int[] colonnesindexes = resolveColumnIndexes(columnNames, colonnes1, colonnes2);
-
-        // Création des conditions
-        Condition[] conds = null;
-        if (conditions != null) {
-            conds = new Condition[conditions.length];
-            for (int i = 0; i < conditions.length; i++) {
-                conds[i] = new Condition(conditions[i], colonnes1, colonnes2);
-            }
-        }
-
-        // Création de l'itérateur
-        IRecordIterator iterator = (table2 == null) ?
-                new ProjectOperator(table1, colonnesindexes, conds) :
-                new PageOrientedJoinOperator(table1, table2, Arrays.asList(conds), bm);
-
-        // Affichage des résultats
-        RecordPrinter recordPrinter = new RecordPrinter(iterator, allColumns, colonnesindexes);
-        recordPrinter.printRecords();
-    }
-
-    private List<ColInfo> mergeColumnsWithAlias(List<ColInfo> colonnes1, String alias1, List<ColInfo> colonnes2, String alias2) {
-        List<ColInfo> allColumns = new ArrayList<>();
-        for (ColInfo col : colonnes1) {
-            col.setAlias(alias1); // Appliquer alias à colonnes1
-            allColumns.add(col);
-        }
-        if (colonnes2 != null) {
-            for (ColInfo col : colonnes2) {
-                col.setAlias(alias2); // Appliquer alias à colonnes2
-                allColumns.add(col);
-            }
-        }
-        return allColumns;
-    }
-
-    // Méthode pour récupérer les indexes dans le cas mono-table
-    private int[] getIndexesForSingleTable(String[] columnNames, Relation table) {
         int[] colonnesindexes;
         if (columnNames.length == 1 && columnNames[0].equals("*")) {
-            colonnesindexes = new int[table.getNbColonnes()];
-            for (int i = 0; i < table.getNbColonnes(); i++) {
+            colonnesindexes = new int[tab.getNbColonnes()];
+            for (int i = 0; i < tab.getNbColonnes(); i++) {
                 colonnesindexes[i] = i;
             }
         } else {
             colonnesindexes = new int[columnNames.length];
             for (int i = 0; i < columnNames.length; i++) {
-                if (table.hasColumn(columnNames[i])) {
-                    colonnesindexes[i] = table.indexOfColumn(columnNames[i]);
-                } else {
-                    throw new IllegalArgumentException("Colonne non trouvée : " + columnNames[i]);
+                if (tab.hasColumn(columnNames[i])) {
+                    colonnesindexes[i] = tab.indexOfColumn(columnNames[i]);
                 }
             }
         }
-        return colonnesindexes;
+        Condition[] conds = null;
+        if (conditions != null) {
+            conds = new Condition[conditions.length];
+            for (int i = 0; i < conditions.length; i++) {
+                conds[i] = new Condition(conditions[i],tab.getColonnes());
+            }
+        }
+        ProjectOperator projectOperator = new ProjectOperator(tab, colonnesindexes, conds);
+        RecordPrinter recordPrinter = new RecordPrinter(projectOperator, tab.getColonnes(), colonnesindexes);
+        recordPrinter.printRecords();
     }
-
-    private int[] resolveColumnIndexes(String[] columnNames, List<ColInfo> colonnes1, List<ColInfo> colonnes2) {
-        // Si * est présent, retourner tous les index des colonnes
-        if (columnNames.length == 1 && columnNames[0].equals("*")) {
-            System.out.println("Debug: Sélection de toutes les colonnes");
-            int[] indexes = new int[colonnes1.size() + (colonnes2 != null ? colonnes2.size() : 0)];
-            for (int i = 0; i < indexes.length; i++) {
-                indexes[i] = i;
-            }
-            return indexes;
-        }
-
-        // Traitement normal pour les colonnes avec alias
-        int[] indexes = new int[columnNames.length];
-
-        for (int i = 0; i < columnNames.length; i++) {
-            String[] parts = columnNames[i].split("\\.");
-            if (parts.length != 2) {
-                throw new IllegalArgumentException("Format incorrect pour la colonne : " + columnNames[i]);
-            }
-
-            String alias = parts[0];
-            String columnName = parts[1];
-            boolean found = false;
-
-            // Recherche dans colonnes1
-            for (int j = 0; j < colonnes1.size(); j++) {
-                if (colonnes1.get(j).getAlias().equals(alias) && colonnes1.get(j).getNom().equals(columnName)) {
-                    indexes[i] = j;
-                    found = true;
-                    break;
-                }
-            }
-
-            // Recherche dans colonnes2 (si non trouvé)
-            if (!found && colonnes2 != null) {
-                for (int j = 0; j < colonnes2.size(); j++) {
-                    if (colonnes2.get(j).getAlias().equals(alias) && colonnes2.get(j).getNom().equals(columnName)) {
-                        indexes[i] = colonnes1.size() + j; // Décalage pour colonnes2
-                        found = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!found) {
-                throw new IllegalArgumentException("Colonne non trouvée : " + columnNames[i]);
-            }
-        }
-        return indexes;
+    public DBIndexManager getIndexManager() {
+        return indexManager;
     }
 }

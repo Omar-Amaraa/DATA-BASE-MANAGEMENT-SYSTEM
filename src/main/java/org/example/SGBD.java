@@ -1,8 +1,8 @@
 package org.example;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
 
 public class SGBD {
@@ -10,7 +10,6 @@ public class SGBD {
     private final DiskManager diskManager;
     private final BufferManager bufferManager;
     private final DBManager dbManager;
-
 
     public SGBD(DBConfig dbConfig) {
         this.dbConfig = dbConfig;
@@ -28,11 +27,11 @@ public class SGBD {
             String[] parts = command.split(" ");
             switch (parts[0].toUpperCase()) {
                 case "CREATE" -> {
-                    switch (parts[1].toUpperCase()) {
+                    switch (parts[1].toUpperCase()) {  
                         case "DATABASE" -> processCreateDBCommand(command);
                         case "TABLE" -> processCreateTableCommand(command);
-                        default -> System.out.println("Invalid command: " + command);
-                    }
+                        default ->  System.out.println("Invalid command: " + command);
+                    } 
                 }
                 case "SET" -> processSetDBCommand(command);
 
@@ -52,6 +51,8 @@ public class SGBD {
                     }
                 }
                 case "INSERT" -> processInsertIntoCommand(command);
+                case "CREATEINDEX" -> processCreateIndexCommand(command);
+                case "SELECTINDEX" -> processSelectIndexCommand(command);
                 case "BULKINSERT" -> processBulkInsertCommand(command);
                 case "SELECT" -> processSelectCommand(command);
                 case "QUIT" -> {
@@ -62,6 +63,16 @@ public class SGBD {
                 default -> System.out.println("Invalid command: " + command);
             }
         }
+    }
+
+    private void processCreateDBCommand(String command) {
+        String parts[] = command.split(" ");
+        if (parts.length != 3) {
+            System.err.println("Usage: CREATE DATABASE <db-name>");
+            return;
+        }
+        String dbName = parts[2];
+        dbManager.createDatabase(dbName);
     }
 
     private void processCreateTableCommand(String command) {
@@ -99,16 +110,6 @@ public class SGBD {
         dbManager.AddTableToCurrentDatabase(table);
     }
 
-    private void processCreateDBCommand(String command) {
-        String parts[] = command.split(" ");
-        if (parts.length != 3) {
-            System.err.println("Usage: CREATE DATABASE <db-name>");
-            return;
-        }
-        String dbName = parts[2];
-        dbManager.createDatabase(dbName);
-    }
-
     private void processSetDBCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
@@ -118,10 +119,10 @@ public class SGBD {
         String dbName = parts[2];
         dbManager.setCurrentDatabase(dbName);
     }
-
+    
     private void processListTablesCommand() {
         dbManager.ListTablesInCurrentDatabase();
-    }
+    }   
 
     private void processListDatabasesCommand() {
         dbManager.ListDatabases();
@@ -131,7 +132,7 @@ public class SGBD {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
             System.err.println("Usage: DROP TABLE <table-name>");
-            return;
+            return ;
         }
         String tableName = parts[2];
         dbManager.RemoveTableFromCurrentDatabase(tableName);
@@ -156,6 +157,8 @@ public class SGBD {
         diskManager.SaveState();
     }
 
+    //TP7
+
     private void processInsertIntoCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 5) {
@@ -166,7 +169,7 @@ public class SGBD {
         String values = parts[4].substring(parts[4].indexOf('(') + 1, parts[4].lastIndexOf(')')).trim();
         String[] valueParts = values.split(",");
         dbManager.InsertRecordIntoTable(tableName, valueParts);
-    }
+    }    
 
     private void processBulkInsertCommand(String command) {
         String[] parts = command.split(" ");
@@ -193,33 +196,112 @@ public class SGBD {
         }
     }
 
+
     private void processSelectCommand(String command) {
-        String[] parts = command.split(" ");
-        if (parts.length < 4) {
+        String parts[] = command.split(" ");
+        if (parts.length < 5) {
             System.err.println("Usage: SELECT <table-alias>.<column-name1>,<table-alias>.<column-name2>,... FROM <table-name> <table-alias> [WHERE <condition1> AND <condition2> ...]");
             return;
         }
-
-        // Colonnes à sélectionner (ne pas supprimer les alias)
         String columns = parts[1];
         String[] columnNames = columns.split(",");
-
-        // Récupérer les tables et leurs alias
-        String tableNames = parts[3]; // "R r,S s"
-
-        // Récupérer les conditions (si présentes)
+        String tableName = parts[3];
+        for (int i = 0; i < columnNames.length; i++) {
+            columnNames[i] = columnNames[i].substring(columnNames[i].indexOf('.') + 1);
+        }
         String[] conditions = new String[0];
-        if (command.toUpperCase().contains("WHERE")) {
+        if (parts.length > 5) {
             String condition = command.substring(command.indexOf("WHERE") + 6).trim();
             conditions = condition.split("AND");
             for (int i = 0; i < conditions.length; i++) {
                 conditions[i] = conditions[i].trim();
             }
         }
+    
+        dbManager.SelectRecords(columnNames, tableName, conditions);
 
-        // Appeler SelectRecords avec toutes les informations
-        dbManager.SelectRecords(columnNames, tableNames, conditions);
+        
     }
+    private void processSelectIndexCommand(String command) { //Omar AMARA 12/16/2024
+        // Format attendu : SELECTINDEX * FROM nomRelation WHERE nomColonne=valeur
+        String[] parts = command.split(" ");
+        if (parts.length != 6) {
+            System.err.println("Usage: SELECTINDEX * FROM <relation-name> WHERE <column-name>=<value>");
+            return;
+        }
+
+        String relationName = parts[3]; // Nom de la relation
+        String[] condition = parts[5].split("="); // Condition colonne=valeur
+        String columnName = condition[0];
+        String value = condition[1]; // Valeur recherchée
+
+        // Récupérer l'index
+        DBIndexManager indexManager = dbManager.getIndexManager();
+        BPlusTree index = indexManager.getIndex(relationName, columnName);
+
+        if (index == null) {
+            System.err.println("Index on column " + columnName + " for relation " + relationName + " does not exist.");
+            return;
+        }
+
+
+        // Rechercher dans l'index
+        List<RecordId> matchingRecordIds = index.search(value);
+
+        if (matchingRecordIds.isEmpty()) {
+            System.out.println("No records found for " + columnName + "=" + value);
+            return;
+        }
+
+        // Afficher les records correspondants
+        Relation table = dbManager.getTableFromCurrentDatabase(relationName);
+        int i =0;
+        for (RecordId rid : matchingRecordIds) {
+            Record record = table.getRecordById(rid); // Ajoutez une méthode pour récupérer un record via RecordId
+            System.out.println(record.toString());
+            i++;
+        }
+        System.out.println("B+ search : Total records : " + i);
+
+
+    }
+
+
+    private void processCreateIndexCommand(String command) {//Omar AMARA 12/16/2024
+        String[] parts = command.split(" ");
+        if (parts.length != 5) {
+            System.err.println("Usage: CREATEINDEX ON <relation-name> KEY=<column-name> ORDER=<order>");
+            return;
+        }
+
+        String relationName = parts[2];
+        String columnName = parts[3].split("=")[1];
+        int order = Integer.parseInt(parts[4].split("=")[1]);
+
+        // Get the Relation object
+        Relation relation = dbManager.getTableFromCurrentDatabase(relationName);
+        if (relation == null) {
+            System.err.println("Relation " + relationName + " not found.");
+            return;
+        }
+
+        // Check if the column exists in the relation
+        if (!relation.hasColumn(columnName)) {
+            System.err.println("Column " + columnName + " not found in relation " + relationName);
+            return;
+        }
+
+        // Get all records and record IDs from the relation
+        List<Record> records = relation.GetAllRecords();
+        List<RecordId> recordIds = relation.GetAllRecordIds();
+
+        // Create the index
+        DBIndexManager indexManager = dbManager.getIndexManager();
+        indexManager.createIndex(relationName, columnName, order, records, recordIds, relation);
+    }
+
+
+
 
     public static void main(String[] args) {
         // if (args.length != 1) {
@@ -232,4 +314,5 @@ public class SGBD {
         SGBD sgbd = new SGBD(dbConfig);
         sgbd.run();
     }
+    
 }

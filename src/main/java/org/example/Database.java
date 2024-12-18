@@ -89,14 +89,14 @@ public class Database implements Serializable {
     public ArrayList<Relation> getAllTables() {
         return this.tables;
     }
-
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Database ").append(nom).append(", nbtables=").append(tables.size()).append("\n");
+        sb.append("Database ").append(nom).append(", Number table=").append(tables.size()).append("\n");
         sb.append(String.join("\n",tables.stream().map(Relation::toString).toArray(String[]::new)));
         return sb.toString();
     }
 
-
+    
 }

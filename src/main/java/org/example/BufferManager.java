@@ -40,7 +40,7 @@ public class BufferManager implements Serializable {
         // System.out.println("La page" + retbuffer.getPageId().toString() + "est chargée dans pool depuis le disque\n");
         // System.out.println("La page" + pageId.toString() + "est ajoutée dans la queue MRU -> LRU\n");
         // System.out.println("Queue: " + bufferPool.toString());
-
+        
         // Si la taille du buffer est atteinte, on doit remplacer une page
         if (bufferPool.size() >= dbConfiginstance.getBm_buffercount()) {
             Buffer removedBuffer;
@@ -91,7 +91,7 @@ public class BufferManager implements Serializable {
             }
         }
     }
-    public void setCurrentReplacementPolicy(String policy){
+    public void setCurrentReplacementPolicy(String policy){ 
         if(policy.equals(dbConfiginstance.getBm_policy())){
             System.out.println("La politique de remplacement est déjà "+policy);
         } else {
