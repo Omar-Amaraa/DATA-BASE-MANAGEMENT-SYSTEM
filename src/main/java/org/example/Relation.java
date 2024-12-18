@@ -1,20 +1,35 @@
 package org.example;
 
-
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 
-
+/**
+ * Classe Relation pour représenter une relation dans la base de données.
+ * Cette classe est utilisée pour gérer les relations et leurs métadonnées.
+ * 
+ * <p>
+ * Auteur : CHAU Thi, Zineb Fennich, Omar AMARA
+ * </p>
+ */
 public class Relation implements Serializable {
     private static final long serialVersionUID = 1L;
     private String nomrelation;
     private int nbcolonnes;
-    private final ArrayList<ColInfo> colonnes;
-    private final PageId headerPageId;
-    private final DiskManager diskManager;
-    private final BufferManager bufferManager;
+    private final List<ColInfo> colonnes;
+    private final transient PageId headerPageId;
+    private final transient DiskManager diskManager;
+    private final transient BufferManager bufferManager;
 
+    /**
+     * Constructeur de Relation.
+     * 
+     * @param n            Le nom de la relation.
+     * @param nbcolonnes   Le nombre de colonnes.
+     * @param diskManager  Le gestionnaire de disque.
+     * @param bufferManager Le gestionnaire de tampon.
+     */
     public Relation(String n, int nbcolonnes, DiskManager diskManager, BufferManager bufferManager) {
         this.nomrelation = n;
         this.nbcolonnes = nbcolonnes;
@@ -27,42 +42,81 @@ public class Relation implements Serializable {
         this.diskManager = diskManager;
         this.bufferManager = bufferManager;
     }
+
+    /**
+     * Retourne l'identifiant de la page d'en-tête.
+     * 
+     * @return L'identifiant de la page d'en-tête.
+     */
     public PageId getHeaderPageId() {
         return headerPageId;
     }
 
+    /**
+     * Retourne le nom de la relation.
+     * 
+     * @return Le nom de la relation.
+     */
     public String getNomrelation() {
         return nomrelation;
     }
-
+    /**
+     * Retourne le nombre de colonnes.
+     * @return Le nombre de colonnes.
+     */
     public int getNbColonnes() {
         return nbcolonnes;
     }
-
+    /**
+     * Retourne la colonne à l'index spécifié.
+     * @param i
+     * @return La colonne à l'index spécifié.
+     */
     public ColInfo getCol(int i) {
         return colonnes.get(i);
     }
-
-    public ArrayList<ColInfo> getColonnes() {
+    /**
+     * Retourne la liste des colonnes.
+     * 
+     * @return La liste des colonnes.
+     */
+    public List<ColInfo> getColonnes() {
         return colonnes;
     }
-
+    /**
+     * Retourne le gestionnaire de buffer.
+     * @return
+     */
     public BufferManager getBufferManager() {
         return bufferManager;
     }
-
+   /**
+    * Set le nom de la relation.
+    * @param nomrelation
+    */
     public void setNomrelation(String nomrelation) {
         this.nomrelation = nomrelation;
     }
-
+    /**
+     * Set le nombre de colonnes.
+     * @param nbcolonnes
+     */
     public void setNbcolonnes(int nbcolonnes) {
         this.nbcolonnes = nbcolonnes;
     }
-
+    /**
+     * Ajoute une colonne à la relation.
+     * @param colInfo
+     */
     public void ajouterColonne(ColInfo colInfo) {
         colonnes.add(colInfo);
     }
-
+    /**
+     * 
+     *Verifie si la relation contient une colonne avec le nom spécifié.
+     * @param nomColonne
+     * @return
+     */
     public boolean hasColumn(String nomColonne) {
         for (ColInfo colInfo : colonnes) {
             if (colInfo.getNom().equals(nomColonne)) {
@@ -71,7 +125,11 @@ public class Relation implements Serializable {
         }
         return false;
     }
-
+    /**
+     * Retourne l'index de la colonne avec le nom spécifié.
+     * @param nomColonne
+     * @return
+     */
     public int indexOfColumn(String nomColonne) {
         for (int i = 0; i < colonnes.size(); i++) {
             if (colonnes.get(i).getNom().equals(nomColonne)) {
@@ -80,6 +138,13 @@ public class Relation implements Serializable {
         }
         return -1;
     }
+    /**
+     * Retourne la taille d'un record.
+     * @param record
+     * @param buffer
+     * @param pos
+     * @return
+     */
 
     public int writeRecordToBuffer(Record record, ByteBuffer buffer, int pos) {
         int initialPos = pos;
@@ -117,6 +182,14 @@ public class Relation implements Serializable {
         }
         return pos - initialPos; // Taille totale écrite
     }
+    /**
+     * Retourne la taille d'un record lu depuis un buffer.
+     * 
+     * @param record
+     * @param buffer
+     * @param pos
+     * @return
+     */
 
     public int readFromBuffer(Record record, ByteBuffer buffer, int pos) {
         int initialPos = pos;
@@ -157,7 +230,10 @@ public class Relation implements Serializable {
         return pos - initialPos; // Taille totale lue
     }
     
-    // Ajoute une page de données à la relation
+    /**
+     * Ajoute une page de données à la relation.
+     * 
+     */
     public void addDataPage() {
         PageId nouvPage = diskManager.AllocPage();//Alloue une nouvelle page
         Buffer buffHeaderPage=bufferManager.getPage(headerPageId);//Recupere la page depuis Buffer
@@ -182,7 +258,11 @@ public class Relation implements Serializable {
         bufferManager.FlushBuffers();
         
     }
-
+    /**
+     * Retourne une page de données libre pour écrire un record.
+     * @param sizeRecord
+     * @return
+     */
     public PageId getFreeDataPageId(int sizeRecord){
         Buffer headerBuffer = bufferManager.getPage(headerPageId);
         ByteBuffer buff = headerBuffer.getContenu();
@@ -200,7 +280,12 @@ public class Relation implements Serializable {
         bufferManager.FreePage(headerPageId, false);
         return null;
     }
-
+    /**
+     * Ecrit un record dans une page de données.
+     * @param record
+     * @param pageId
+     * @return
+     */
     public RecordId writeRecordToDataPage(Record record, PageId pageId) {
         Buffer buffDataPage = bufferManager.getPage(pageId);
         ByteBuffer buff = buffDataPage.getContenu();
@@ -235,7 +320,11 @@ public class Relation implements Serializable {
 
         return new RecordId(pageId, slotidx);
     }
-
+    /**
+     * Retourne les records dans une page de données.
+     * @param pageId
+     * @return Les records dans une page de données.
+     */
 
     public ArrayList<Record> getRecordsInDataPage(PageId pageId){
         ArrayList<Record> records = new ArrayList<>();
@@ -252,19 +341,23 @@ public class Relation implements Serializable {
                 continue;
             }
             if (posRecord + sizeRecord > posDebutLibre) {
-                throw new RuntimeException("Erreur lors de la lecture du record");
+                throw new RuntimeException("Error reading record");
             }
             Record record = new Record();
             int byteread = readFromBuffer(record, buff, posRecord);
             if (byteread != sizeRecord) {
-                throw new RuntimeException("Erreur lors de la lecture du record");
+                throw new RuntimeException("Error reading record");
             }
             records.add(record);
         }
         bufferManager.FreePage(pageId, false);
         return records;
     }
-
+    /**
+     * Retourne les pages de données.
+     * 
+     * @return L'identifiant des pages de données.
+     */
     public ArrayList<PageId> getDataPages(){
         ArrayList<PageId> dataPages = new ArrayList<>();
         Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
@@ -279,7 +372,12 @@ public class Relation implements Serializable {
         bufferManager.FreePage(headerPageId, false);
         return dataPages;
     }
-
+    /**
+     * Insère un record dans la relation.
+     * 
+     * @param record Le record à insérer.
+     * @return L'identifiant du record inséré.
+     */
     public RecordId insertRecord(Record record) {
         int sizeRecord = 0;
         int i = 0;
@@ -299,7 +397,10 @@ public class Relation implements Serializable {
         }
         return writeRecordToDataPage(record, pageId);
     }
-
+    /**
+     * Retourne tous les records de la relation.
+     * @return Les records de la relation.
+     */
     public ArrayList<Record> GetAllRecords(){
         ArrayList<Record> records = new ArrayList<>();
         Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
@@ -312,8 +413,13 @@ public class Relation implements Serializable {
             PageId pageId = new PageId(fileIdx, pageIdx);
             records.addAll(getRecordsInDataPage(pageId));
         }
+        bufferManager.FreePage(headerPageId, false);
         return records;
     }
+    /**
+     * Retourne tous les RecordIds de la relation.
+     * @return
+     */
     public ArrayList<RecordId> GetAllRecordIds() { //Omar AMARA 12/16/2024
         ArrayList<RecordId> recordIds = new ArrayList<>();
         Buffer buffHeaderPage = bufferManager.getPage(headerPageId);
@@ -343,6 +449,11 @@ public class Relation implements Serializable {
         bufferManager.FreePage(headerPageId, false);
         return recordIds;
     }
+    /**
+     * Retourne un record par son identifiant.
+     * @param recordId
+     * @return
+     */
 
     public Record getRecordById(RecordId recordId) { //Omar AMARA 12/16/2024
         PageId pageId = recordId.getPageId();
@@ -378,7 +489,9 @@ public class Relation implements Serializable {
         bufferManager.FreePage(pageId, false);
         return record;
     }
-
+    /**
+     * Override de la méthode equals.
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -390,17 +503,21 @@ public class Relation implements Serializable {
         }
         return false;
     }
-
+    /**
+     * Override de la méthode hashCode.
+     */
     @Override
     public int hashCode() {
         return super.hashCode();
     }
-
+    /**
+     * Override de la méthode toString.
+     */ 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(nomrelation);
-        sb.append(",nbcolonnes=").append(nbcolonnes);
+        sb.append(",Number of column=").append(nbcolonnes);
         sb.append(colonnes.toString());
         return sb.toString();
     }

@@ -6,7 +6,9 @@ import java.io.Serializable;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
+/**
+ * Classe DBConfig qui permet de lire le fichier de configuration de la base de données
+ */
 public class DBConfig implements Serializable {
     private static final long serialVersionUID = 1L;
     private String dbpath;
@@ -14,7 +16,14 @@ public class DBConfig implements Serializable {
     private int dm_maxfilesize;
     private int bm_buffercount;
     private String bm_policy;
-
+    /**
+     * Constructeur de la classe DBConfig
+     * @param dbpath chemin de la fichier pour configurer la base de données
+     * @param pagesize taille des pages
+     * @param dm_maxfilesize taille maximale du fichier
+     * @param bm_buffercount nombre de buffers dans le buffer pool
+     * @param bm_policy politique de remplacement des pages
+     */
     public DBConfig(String dbpath, int pagesize, int dm_maxfilesize, int bm_buffercount, String bm_policy) {
         this.dbpath = dbpath;
         this.pagesize = pagesize;
@@ -30,7 +39,10 @@ public class DBConfig implements Serializable {
         this.bm_buffercount = config.getBm_buffercount();
         this.bm_policy = config.getBm_policy();
     }
-
+    /**
+     * Getters et Setters
+     * @return les attributs de la classe
+     */
     public String getDbpath() {
         return dbpath;
     }
@@ -50,7 +62,11 @@ public class DBConfig implements Serializable {
     public void setBm_policy(String bm_policy) {
         this.bm_policy = bm_policy;
     }
-
+    /**
+     * Méthode qui permet de lire le fichier de configuration de la base de données
+     * @param fichier_config chemin du fichier de configuration
+     * @return un objet DBConfig
+     */
     public static DBConfig LoadDBConfig(String fichier_config) {
         JSONParser jsonParser = new JSONParser();
         try (FileReader reader = new FileReader(fichier_config)) {

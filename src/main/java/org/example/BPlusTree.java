@@ -6,33 +6,46 @@ import java.util.Collections;
 import java.util.List;
 
 
-//Omar AMARA 12/16/2024
-// B+ Tree class for indexing
+/**
+ * Classe BPlusTree pour gérer les opérations d'insertion et de recherche dans un arbre B+.
+ * 
+ * Auteur: Omar AMARA
+ * Date: 16/12/2024
+ */
 class BPlusTree {
     
-    private BPlusTreeNode root; // Root node of the tree
-    private final int order; // Maximum number of children per node
-    
+    private BPlusTreeNode root; // Racine de l'arbre
+    private final int order; // Nombre maximum de clés par noeud
+    /**
+     * Constructeur de BPlusTree.
+     * @param order
+     */
     public BPlusTree(int order) {
         if (order < 3) {
-            throw new IllegalArgumentException("Order must be at least 3");
+            throw new IllegalArgumentException("Ordre de l'arbre B+ doit être au moins 3");
         }
         this.root = new BPlusTreeNode(true);
         this.order = order;
     }
-    
-    // Insert a key and its associated RecordId into the tree
+    /**
+     * Méthode pour insérer une nouvelle clé et son RecordId associé dans l'arbre.
+     * @param rid
+     * @param key
+     */
+    // Insérer une nouvelle clé et son RecordId associé dans l'arbre
     public void insert(RecordId rid, Object key) {
         BPlusTreeNode leaf = findLeaf(key);
         insertIntoLeaf(leaf, key, rid);
 
-        // Split the leaf node if it exceeds the maximum allowed keys
+        // Diviser le noeud feuille s'il dépasse le nombre maximum de clés autorisées
         if (leaf.keys.size() > order - 1) {
             splitLeaf(leaf);
         }
     }
-    
-    // Find the appropriate leaf node for a given key
+    /** 
+    * Méthode pour trouver le noeud feuille contenant la clé donnée.
+    * @param key
+    */
     private BPlusTreeNode findLeaf(Object key) {
         BPlusTreeNode node = root;
         while (!node.isLeaf) {
@@ -42,12 +55,16 @@ class BPlusTree {
             }
             node = node.children.get(i);
         }
-        // Debug: Print the leaf keys
-        //System.out.println("findLeaf: Found leaf with keys: " + node.keys);
+        
         return node;
     }
+    /**
+     * Méthode pour insérer une nouvelle clé et son RecordId associé dans un noeud feuille.
+     * @param leaf
+     * @param key
+     * @param rid
+     */
     @SuppressWarnings("unchecked")
-    // Insert into a leaf node
     private void insertIntoLeaf(BPlusTreeNode leaf, Object key, RecordId rid) {
         int pos = Collections.binarySearch(leaf.keys, key, (a, b) -> ((Comparable<Object>) a).compareTo(b));
         if (pos < 0) {
@@ -57,12 +74,15 @@ class BPlusTree {
         leaf.recordIds.add(pos, rid);
     }
     
-    // Split a leaf node and adjust the parent node
+    /**
+     * Méthode pour diviser un noeud feuille.
+     * @param leaf
+     */
     private void splitLeaf(BPlusTreeNode leaf) {
         int mid = (order + 1) / 2;
         BPlusTreeNode newLeaf = new BPlusTreeNode(true);
 
-        // Move half the keys and RecordIds to the new leaf
+        // Deplacer la moitié des clés et des RecordIds dans le nouveau noeud feuille
         newLeaf.keys.addAll(leaf.keys.subList(mid, leaf.keys.size()));
         newLeaf.recordIds.addAll(leaf.recordIds.subList(mid, leaf.recordIds.size()));
         leaf.keys.subList(mid, leaf.keys.size()).clear();
@@ -72,7 +92,7 @@ class BPlusTree {
         newLeaf.next = leaf.next;
         leaf.next = newLeaf;
 
-        // Update the parent node
+        // Mis à jour de la racine si le noeud feuille est la racine
         if (leaf == root) {
             BPlusTreeNode newRoot = new BPlusTreeNode(false);
             newRoot.keys.add(newLeaf.keys.getFirst());
@@ -83,8 +103,13 @@ class BPlusTree {
             insertIntoParent(leaf, newLeaf, newLeaf.keys.getFirst());
         }
     }
+    /**
+     * Méthode pour insérer un nouveau noeud enfant dans un noeud interne.
+     * @param left noeud enfant gauche
+     * @param right noeud enfant droit
+     * @param key nouvelle clé
+     */
     @SuppressWarnings("unchecked")
-    // Insert a new key into the parent node after splitting
     private void insertIntoParent(BPlusTreeNode left, BPlusTreeNode right, Object key) {
         BPlusTreeNode parent = findParent(root, left);
 
@@ -96,29 +121,32 @@ class BPlusTree {
         parent.keys.add(pos, key);
         parent.children.add(pos + 1, right);
 
-        // Split the parent node if it exceeds the maximum allowed keys
+        // Diviser le noeud interne s'il dépasse le nombre maximum de clés autorisées
         if (parent.keys.size() > order - 1) {
             splitInternal(parent);
         }
     }
 
-    // Split an internal node
+    /**
+     * Méthode pour diviser un noeud interne.
+     * @param internal noeud interne
+     */
     private void splitInternal(BPlusTreeNode internal) {
         int mid = internal.keys.size() / 2;
         BPlusTreeNode newInternal = new BPlusTreeNode(false);
 
-        // Move half the keys to the new internal node
+        // Deplacer la moitié des clés dans le nouveau noeud interne
         newInternal.keys.addAll(new ArrayList<>(internal.keys.subList(mid + 1, internal.keys.size())));
         internal.keys.subList(mid + 1, internal.keys.size()).clear();
 
-        // Move half the children to the new internal node
+        // Deplacer la motité des enfants dans le nouveau noeud interne
         newInternal.children.addAll(new ArrayList<>(internal.children.subList(mid + 1, internal.children.size())));
         internal.children.subList(mid + 1, internal.children.size()).clear();
 
-        // Promote the middle key to the parent
+        // Promouvoir la clé du milieu au parent
         Object promotedKey = internal.keys.remove(mid);
 
-        // If the root splits, create a new root
+        // Si le noeud interne est la racine, créer une nouvelle racine
         if (internal == root) {
             BPlusTreeNode newRoot = new BPlusTreeNode(false);
             newRoot.keys.add(promotedKey);
@@ -126,12 +154,17 @@ class BPlusTree {
             newRoot.children.add(newInternal);
             root = newRoot;
         } else {
-            // Insert the promoted key into the parent
+            // Insérer le nouveau noeud interne dans le parent
             insertIntoParent(internal, newInternal, promotedKey);
         }
     }
     
-    // Find the parent node of a given child node
+    /**
+     * Méthode pour trouver le parent d'un noeud donné.
+     * @param current noeud courant
+     * @param target noeud cible
+     * @return Noeud parent
+     */
     private BPlusTreeNode findParent(BPlusTreeNode current, BPlusTreeNode target) {
         if (current.isLeaf || current.children.isEmpty()) {
             return null;
@@ -149,40 +182,42 @@ class BPlusTree {
         }
         return null;
     }
-    // Search for a key in the tree and return its associated RecordId(s)
+    /**
+     * Méthode pour rechercher une clé dans l'arbre.
+     * @param key
+     * @return Liste des RecordId correspondant à la clé
+     */
     public List<RecordId> search(Object key) {
-        // Convert key from String to Integer if necessary
+        // Convertir la clé en entier si possible
         if (key instanceof String) {
             String keyStr = (String) key;
             try {
-                // Check if the string is a number, and convert it if necessary
+                // Verifier si la clé est un entier
                 key = Integer.parseInt(keyStr);
             } catch (NumberFormatException e) {
-                // Key remains a string, treat it as such
+                // Clé n'est pas un entier
                 System.out.println("Treating key as String: " + key);
             }
         }
 
-        // Start from the leftmost leaf node
+        // Trouver le noeud feuille contenant la clé
         BPlusTreeNode leaf = root;
         while (!leaf.isLeaf) {
-            leaf = leaf.children.getFirst(); // Go to the leftmost child
+            leaf = leaf.children.getFirst(); // Le premier enfant est le noeud feuille le plus à gauche
         }
 
         List<RecordId> result = new ArrayList<>();
         //System.out.println("search: Starting search for key: " + key);
 
-        // Traverse all linked leaf nodes
+        // Parcourir les noeuds feuilles pour trouver la clé
         while (leaf != null) {
-            //System.out.println("search: Checking leaf with keys: " + leaf.keys);
-            for (int i = 0; i < leaf.keys.size(); i++) {
-                //System.out.println("search: Comparing key: " + key + " with leaf key: " + leaf.keys.get(i));
-                if (key.equals(leaf.keys.get(i))) {
-                    //System.out.println("search: Match found! RecordId: " + leaf.recordIds.get(i));
+            for (int i = 0; i < leaf.keys.size(); i++) {// Parcourir les clés du noeud feuille
+                if (key.equals(leaf.keys.get(i))) {//Comparer la clé avec la clé actuelle
+                    System.out.println("search: Match found! RecordId: " + leaf.recordIds.get(i));
                     result.add(leaf.recordIds.get(i));
                 }
             }
-            leaf = leaf.next; // Move to the next linked leaf node
+            leaf = leaf.next; // Deplacer au noeud feuille suivant
         }
 
         System.out.println("Total records " + result.size());
