@@ -56,8 +56,8 @@ Java 8 ou supérieur
 Un système d’exploitation supportant les scripts fournis (.bat sous Windows, .sh sous Linux/Unix)
 
 ## Auteurs
-Thi Chau 
-Zineb Fennich
+Thi Chau,
+Zineb Fennich,
 Omar Amara
 
 
