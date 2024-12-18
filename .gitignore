@@ -11,7 +11,8 @@ target/
 *.iws
 *.iml
 *.ipr
-
+# Ignorer tous les fichiers .class
+*.class
 ### Eclipse ###
 .apt_generated
 .classpath

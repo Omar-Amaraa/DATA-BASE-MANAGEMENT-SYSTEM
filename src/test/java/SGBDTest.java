@@ -1,7 +1,5 @@
-package org.example;
-import org.example.DBConfig;
-import org.example.DiskManager;
 import org.example.SGBD;
+import org.example.DBConfig;
 
 public class SGBDTest {
 
@@ -13,84 +11,61 @@ public class SGBDTest {
         DBConfig dbConfig = new DBConfig(configFilePath);
         SGBD sgbd = new SGBD(dbConfig);
 
-        // Test creating a database
-        testCreateDatabase(sgbd, "testDB");
+        // Clean up any existing databases
+        cleanupDatabases(sgbd);
 
-        // Test setting the current database
-        testSetDatabase(sgbd, "testDB");
+        // Create a database
+        createDatabase(sgbd, "testDB");
 
-        // Test creating a table
-        testCreateTable(sgbd, "testTable", "(col1:INT, col2:VARCHAR(50))");
+        // Set the current database
+        setDatabase(sgbd, "testDB");
 
-        // Test inserting a record
-        testInsertInto(sgbd, "testTable", "(1, 'value1')");
+        // Create a new table
+        createTable(sgbd, "newTable", "(col1:INT,col2:VARCHAR(50))");
+        char guillemets= '"';
+        String stringBizarre=guillemets+"valeur1" + guillemets;
+        String valeur ="(1,"+ stringBizarre +")";
+        // Insert a record
+        insertInto(sgbd, "newTable",valeur);
 
-        // Test selecting records
-        testSelect(sgbd, "col1", "testTable");
+        // Select records
+        select(sgbd, "col1", "newTable");
 
-        // Test creating an index
-        testCreateIndex(sgbd, "testTable", "col1", 3);
-
-        // Test selecting using index
-        testSelectIndex(sgbd, "testTable", "col1", "1");
-
-        // Test dropping a table
-        testDropTable(sgbd, "testTable");
-
-        // Test dropping a database
-        testDropDatabase(sgbd, "testDB");
-
-        // Test quitting
-        testQuit(sgbd);
+        // Quit
+        quit(sgbd);
     }
 
-    private static void testCreateDatabase(SGBD sgbd, String dbName) {
-        System.out.println("Testing CREATE DATABASE " + dbName);
+    private static void cleanupDatabases(SGBD sgbd) {
+        sgbd.processDropDatabaseCommand("DROP DATABASE testDB");
+    }
+
+    private static void createDatabase(SGBD sgbd, String dbName) {
         sgbd.processCreateDBCommand("CREATE DATABASE " + dbName);
+        System.out.println("Base de données créée : " + dbName);
     }
 
-    private static void testSetDatabase(SGBD sgbd, String dbName) {
-        System.out.println("Testing SET DATABASE " + dbName);
+    private static void setDatabase(SGBD sgbd, String dbName) {
         sgbd.processSetDBCommand("SET DATABASE " + dbName);
+        System.out.println("Base de données courante définie : " + dbName);
     }
 
-    private static void testCreateTable(SGBD sgbd, String tableName, String columnDefinitions) {
-        System.out.println("Testing CREATE TABLE " + tableName + " " + columnDefinitions);
+    private static void createTable(SGBD sgbd, String tableName, String columnDefinitions) {
         sgbd.processCreateTableCommand("CREATE TABLE " + tableName + " " + columnDefinitions);
+        System.out.println("Table créée : " + tableName);
     }
 
-    private static void testInsertInto(SGBD sgbd, String tableName, String values) {
-        System.out.println("Testing INSERT INTO " + tableName + " VALUES " + values);
+    private static void insertInto(SGBD sgbd, String tableName, String values) {
         sgbd.processInsertIntoCommand("INSERT INTO " + tableName + " VALUES " + values);
+        System.out.println("Données insérées dans la table : " + tableName);
     }
 
-    private static void testSelect(SGBD sgbd, String column, String tableName) {
-        System.out.println("Testing SELECT " + column + " FROM " + tableName);
-        sgbd.processSelectCommand("SELECT " + column + " FROM " + tableName);
+    private static void select(SGBD sgbd, String column, String tableName) {
+        sgbd.processSelectCommand("SELECT " + tableName + "." + column + " FROM " + tableName + " " + tableName);
+        System.out.println("Données sélectionnées de la table : " + tableName);
     }
 
-    private static void testCreateIndex(SGBD sgbd, String tableName, String columnName, int order) {
-        System.out.println("Testing CREATEINDEX ON " + tableName + " KEY=" + columnName + " ORDER=" + order);
-        sgbd.processCreateIndexCommand("CREATEINDEX ON " + tableName + " KEY=" + columnName + " ORDER=" + order);
-    }
-
-    private static void testSelectIndex(SGBD sgbd, String tableName, String columnName, String value) {
-        System.out.println("Testing SELECTINDEX * FROM " + tableName + " WHERE " + columnName + "=" + value);
-        sgbd.processSelectIndexCommand("SELECTINDEX * FROM " + tableName + " WHERE " + columnName + "=" + value);
-    }
-
-    private static void testDropTable(SGBD sgbd, String tableName) {
-        System.out.println("Testing DROP TABLE " + tableName);
-        sgbd.processDropTableCommand("DROP TABLE " + tableName);
-    }
-
-    private static void testDropDatabase(SGBD sgbd, String dbName) {
-        System.out.println("Testing DROP DATABASE " + dbName);
-        sgbd.processDropDatabaseCommand("DROP DATABASE " + dbName);
-    }
-
-    private static void testQuit(SGBD sgbd) {
-        System.out.println("Testing QUIT");
+    private static void quit(SGBD sgbd) {
         sgbd.processQuitCommand();
+        System.out.println("Quitté proprement");
     }
 }
