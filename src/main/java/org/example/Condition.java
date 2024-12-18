@@ -1,22 +1,37 @@
 package org.example;
 
 import java.util.List;
-
+/**
+ * Classe Condition
+ * Cette classe permet de représenter une condition dans une requête SQL
+ * Une condition est une expression booléenne qui peut être évaluée à vrai ou faux
+ * Elle est composée de deux termes (term1 et term2) et d'un opérateur de comparaison
+ * Les termes peuvent être des valeurs littérales (entiers, réels, chaînes de caractères) ou des colonnes de table
+ *
+ * Auteur: CHAU Thi
+ */
 public class Condition {
     private Object term1;
     private int term1Index;
     private boolean isTerm1Column;
     private ColType term1Type;
+
     private Object term2;
     private int term2Index;
     private boolean isTerm2Column;
     private ColType term2Type;
-    private String operator;
 
-    public Condition(String condition,List<ColInfo> colonnes) {
+    private String operator;
+    /**
+     * Constructeur de la classe Condition
+     * @param condition : condition sous forme de chaîne de caractères
+     * @param colonnes : liste des noms des colonnes <table-name>.<column-name>
+     * @param colInfos : liste des informations correspond a les colonnes
+     */
+    public Condition(String condition,String[] colonnes,List<ColInfo> colInfos) {
         String[] parts;
         String left, right;
-        String[] operators = {"=", "<", ">", "<=", ">=", "<>"};
+        String[] operators = {"<=", ">=", "<>","=", "<", ">", };
         for (String op : operators) {
             if (condition.contains(op)) {
                 this.operator = op;
@@ -32,14 +47,13 @@ public class Condition {
             this.isTerm1Column = false;
             this.term1Type = ColType.CHAR;
         } else if (left.matches(".*[a-zA-Z].*")) { // contient des caractères alphabétiques
-            if (left.contains(".")) { // <alias>.<column-name>
+            if (left.contains(".")) { // <table-name>.<column-name>
                 this.isTerm1Column = true;
-                String[] leftparts = left.split("\\.");
-                for (int i = 0; i < colonnes.size(); i++) {
-                    if (colonnes.get(i).getNom().equals(leftparts[1])) {
+                for (int i = 0; i < colonnes.length; i++) {
+                    if (colonnes[i].equals(left)) {
                         this.term1=null;
                         this.term1Index = i;
-                        this.term1Type = colonnes.get(i).getType();
+                        this.term1Type = colInfos.get(i).getType();
                         if (this.term1Type == ColType.VARCHAR) {
                             this.term1Type = ColType.CHAR;
                         }
@@ -48,7 +62,7 @@ public class Condition {
                 }
             } else {
                 // lack of alias
-                System.out.println("Erreur : le nom de colonne "+left+" dans term1 doit être préfixé par un alias");
+                System.out.println("Error: column name "+left+" in term1 must be prefixed by an alias");
             }
         } else { // <number>
             if (left.contains(".")) { // real number
@@ -69,12 +83,11 @@ public class Condition {
         } else if (right.matches(".*[a-zA-Z].*")) { // contient des caractères alphabétiques
             if (right.contains(".")) { // <alias>.<column-name>
                 this.isTerm2Column = true;
-                String[] rightparts = right.split("\\.");
-                for (int i = 0; i < colonnes.size(); i++) {
-                    if (colonnes.get(i).getNom().equals(rightparts[1])) {
-                        this.term2=null;
+                for (int i = 0; i < colonnes.length; i++) {
+                    if (colonnes[i].equals(right)) {
+                        this.term1=null;
                         this.term2Index = i;
-                        this.term2Type = colonnes.get(i).getType();
+                        this.term2Type = colInfos.get(i).getType();
                         if (this.term2Type == ColType.VARCHAR) {
                             this.term2Type = ColType.CHAR;
                         }
@@ -83,7 +96,7 @@ public class Condition {
                 }                
             } else {
             // manque d'alias
-            System.out.println("Erreur : le nom de colonne "+right+" dans term2 doit être préfixé par un alias");
+            System.out.println("Error: column name "+right+" in term2 must be prefixed by an alias");
             }
         } else { // <number>
             if (right.contains(".")) { // real number
@@ -97,10 +110,14 @@ public class Condition {
             }
         }
     }
-
+    /**
+     * Méthode evaluate
+     * @param row : ligne de la table
+     * @return vrai si la condition est vérifiée, faux sinon
+     */
     public boolean evaluate(Record row) {
         if (this.term1Type != this.term2Type){
-            System.out.println("Erreur : types incompatibles");
+            System.out.println("Error: incompatible types in condition");
             return false;
         }
         if (this.isTerm1Column) {
@@ -117,7 +134,12 @@ public class Condition {
             default -> false;
         };
     }
-
+    /**
+     * Méthode evaluate pour les entiers
+     * @param l : entier
+     * @param r : entier
+     * @return vrai si la condition est vérifiée, faux sinon
+     */
     private boolean evaluateInt(int l, int r) {
         return switch (operator) {
             case ">" -> l > r;
@@ -129,7 +151,12 @@ public class Condition {
             default -> false;
         };
     }
-
+    /**
+     * Méthode evaluate pour les réels
+     * @param l : réel
+     * @param r : réel
+     * @return vrai si la condition est vérifiée, faux sinon
+     */
     private boolean evaluateFloat(float l, float r) {
         return switch (operator) {
             case ">" -> l > r;
@@ -141,6 +168,12 @@ public class Condition {
             default -> false;
         };
     }
+    /**
+     * Méthode evaluate pour les chaînes de caractères
+     * @param l : chaîne de caractères
+     * @param r : chaîne de caractères
+     * @return vrai si la condition est vérifiée, faux sinon
+     */
 
     private boolean evaluateString(String l, String r) {
         return switch (operator) {

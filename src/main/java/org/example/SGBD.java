@@ -2,22 +2,36 @@ package org.example;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
-
+/**
+ * SGBD (Système de Gestion de Base de Données) est la classe principale qui gère les commandes de l'utilisateur.
+ * Il contient les méthodes pour traiter les commandes CREATE DATABASE, CREATE TABLE, SET DATABASE, LIST TABLES, LIST DATABASES, DROP TABLE, DROP DATABASE, DROP DATABASES, INSERT INTO, SELECT, QUIT.
+ * Il contient également les méthodes pour traiter les commandes CREATEINDEX, SELECTINDEX, BULKINSERT.
+ * Auteur: CHAU Thi, Zineb FENNICH, Omar AMARA
+ */
 public class SGBD {
     private final DBConfig dbConfig;
     private final DiskManager diskManager;
     private final BufferManager bufferManager;
     private final DBManager dbManager;
-
+    /**
+     * Constructeur de la classe SGBD
+     * @param dbConfig Configuration de la base de données
+     * @param diskManager Gestionnaire de disque
+     * @param bufferManager Gestionnaire de buffer
+     * @param dbManager Gestionnaire de base de données
+     */
     public SGBD(DBConfig dbConfig) {
         this.dbConfig = dbConfig;
-        this.diskManager = new DiskManager(dbConfig);
-        this.bufferManager = new BufferManager(dbConfig, diskManager);
-        this.dbManager = new DBManager(dbConfig, diskManager, bufferManager);
+        this.diskManager = new DiskManager(this.dbConfig);
+        this.bufferManager = new BufferManager(this.dbConfig, diskManager);
+        this.dbManager = new DBManager(this.dbConfig, diskManager, bufferManager);
     }
-
+    /**
+     * Méthode pour traiter les commandes de l'utilisateur
+     */
     public void run() {
         Scanner scanner = new Scanner(System.in);
         String command;
@@ -64,7 +78,10 @@ public class SGBD {
             }
         }
     }
-
+    /**
+     * Méthode pour traiter la commande CREATE DATABASE
+     * @param command Commande de l'utilisateur
+     */
     private void processCreateDBCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
@@ -74,7 +91,10 @@ public class SGBD {
         String dbName = parts[2];
         dbManager.createDatabase(dbName);
     }
-
+    /**
+     * Méthode pour traiter la commande CREATE TABLE
+     * @param command Commande de l'utilisateur
+     */
     private void processCreateTableCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 4) {
@@ -109,7 +129,10 @@ public class SGBD {
         }
         dbManager.AddTableToCurrentDatabase(table);
     }
-
+    /**
+     * Méthode pour traiter la commande SET DATABASE
+     * @param command Commande de l'utilisateur
+     */
     private void processSetDBCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
@@ -119,15 +142,22 @@ public class SGBD {
         String dbName = parts[2];
         dbManager.setCurrentDatabase(dbName);
     }
-    
+    /**
+     * Méthode pour traiter la commande LIST TABLES
+     */
     private void processListTablesCommand() {
         dbManager.ListTablesInCurrentDatabase();
     }   
-
+    /**
+     * Méthode pour traiter la commande LIST DATABASES
+     */
     private void processListDatabasesCommand() {
         dbManager.ListDatabases();
     }
-
+    /**
+     * Méthode pour traiter la commande DROP TABLE
+     * @param command Commande de l'utilisateur
+     */
     private void processDropTableCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
@@ -137,7 +167,10 @@ public class SGBD {
         String tableName = parts[2];
         dbManager.RemoveTableFromCurrentDatabase(tableName);
     }
-
+    /**
+     * Méthode pour traiter la commande DROP DATABASE
+     * @param command Commande de l'utilisateur
+     */
     private void processDropDatabaseCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
@@ -147,18 +180,26 @@ public class SGBD {
         String dbName = parts[2];
         dbManager.RemoveDatabase(dbName);
     }
-
+    /**
+     * Méthode pour traiter la commande DROP DATABASES
+     */
     private void processDropAllDatabasesCommand() {
         dbManager.RemoveDatabases();
     }
-
+    /**
+     * Méthode pour traiter la commande QUIT
+     * Sauvegarde l'état de la base de données, l'état de Disk et quitte le programme
+     * @param command Commande de l'utilisateur
+     */
     private void processQuitCommand() {
         dbManager.SaveState();
         diskManager.SaveState();
     }
 
-    //TP7
-
+    /**
+     * Méthode pour traiter la commande INSERT INTO
+     * @param command Commande de l'utilisateur
+     */
     private void processInsertIntoCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 5) {
@@ -170,7 +211,10 @@ public class SGBD {
         String[] valueParts = values.split(",");
         dbManager.InsertRecordIntoTable(tableName, valueParts);
     }    
-
+    /**
+     * Méthode pour traiter la commande BULKINSERT qui permet inserer des records d'un fichier csv
+     * @param command Commande de l'utilisateur
+     */
     private void processBulkInsertCommand(String command) {
         String[] parts = command.split(" ");
         if (parts.length != 4) {
@@ -190,38 +234,128 @@ public class SGBD {
                 dbManager.InsertRecordIntoTable(tableName, values);
                 count++;
             }
-            System.out.println(count + " records inserted successfully");
         } catch (IOException e) {
             System.err.println("Error reading csv file: " + e.getMessage());
         }
     }
-
-
+    /**
+     * Méthode pour traiter la commande SELECT
+     * @param command Commande de l'utilisateur
+     */
     private void processSelectCommand(String command) {
-        String parts[] = command.split(" ");
-        if (parts.length < 5) {
-            System.err.println("Usage: SELECT <table-alias>.<column-name1>,<table-alias>.<column-name2>,... FROM <table-name> <table-alias> [WHERE <condition1> AND <condition2> ...]");
+        String fromsplit[] = command.split("FROM");
+        if (fromsplit.length < 2) {
+            System.err.println("Usage: SELECT <table-alias>.<column-name1>,<table-alias>.<column-name2>,... " +
+                                    "FROM <table-name> <table-alias>,<table-name> <table-alias>,... " +
+                                    "[WHERE <condition1> AND <condition2> ...]");
             return;
         }
-        String columns = parts[1];
-        String[] columnNames = columns.split(",");
-        String tableName = parts[3];
-        for (int i = 0; i < columnNames.length; i++) {
-            columnNames[i] = columnNames[i].substring(columnNames[i].indexOf('.') + 1);
+        String[] columns;
+        if (fromsplit[0].trim().equals("SELECT *")) {
+            columns = new String[] { "*" };
+        } else {
+            columns = fromsplit[0].substring(6).trim().split(",");
         }
-        String[] conditions = new String[0];
-        if (parts.length > 5) {
-            String condition = command.substring(command.indexOf("WHERE") + 6).trim();
-            conditions = condition.split("AND");
-            for (int i = 0; i < conditions.length; i++) {
-                conditions[i] = conditions[i].trim();
+        String  wheresplit[] = fromsplit[1].split("WHERE");
+        String[] tables = wheresplit[0].trim().split(",");
+        // Convert tables to dictionary
+        HashMap<String, String> tableAliasMap = new HashMap<>();
+        for (String table : tables) {
+            String[] tableParts = table.trim().split(" ");
+            if (tableParts.length != 2) {
+            System.err.println("Invalid table definition: " + table);
+            return;
+            }
+            tableAliasMap.put(tableParts[1], tableParts[0]);
+        }
+        for (int i = 0; i < tables.length; i++) {
+            String[] tableParts = tables[i].trim().split(" ");
+            tables[i] = tableParts[0];
+        }
+        String[] conditions = wheresplit.length > 1 ? wheresplit[1].trim().split("AND") : null;
+        if (!columns[0].equals("*")) {
+            for (int i = 0; i < columns.length; i++) {
+                String[] parts = columns[i].trim().split("\\.");
+                if (parts.length != 2) {
+                    System.err.println("Invalid column name: " + columns[i]);
+                    return;
+                }
+                String tableAlias = parts[0].trim();
+                String columnName = parts[1].trim();
+                String tableName = tableAliasMap.get(tableAlias);
+                if (tableName == null) {
+                    System.err.println("Table alias not found: " + tableAlias);
+                    return;
+                }
+                columns[i] = tableName + "." + columnName;
             }
         }
-    
-        dbManager.SelectRecords(columnNames, tableName, conditions);
-
+        //Convetir conditions en format <term1><operator><term2>
+        if (conditions != null) {
+            // condition format: <term1><operator><term2>
+            // term format: <table-alias>.<column-name> or <value>
+            // operators: <, >, =, <=, >=, <>
+            // Example: t1.id<=1 or t2.name='John' or 20<>t3.age
+            for (int i = 0; i < conditions.length; i++) {
+                String[] operators = {"<=", ">=", "<>","=", "<", ">"};
+                String operator = "";
+                for (String op : operators) {
+                    if (conditions[i].contains(op)) {
+                        operator = op;
+                        break;
+                    }
+                }
+                String[] conditionParts = conditions[i].trim().split(operator);
+                if (conditionParts.length != 2) {
+                    System.err.println("Invalid condition: " + conditions[i]);
+                    return;
+                }
+                String term1 = conditionParts[0].trim();
+                String term2 = conditionParts[1].trim();
+                if (term1.matches(".*[a-zA-Z].*")) {
+                    if (term1.contains(".")) {
+                        String[] term1Parts = term1.split("\\.");
+                        if (term1Parts.length == 2) {
+                            String tableAlias = term1Parts[0].trim();
+                            String columnName = term1Parts[1].trim();
+                            String tableName = tableAliasMap.get(tableAlias);
+                            if (tableName == null) {
+                                System.err.println("Table alias not found: " + tableAlias);
+                                return;
+                            }
+                            term1 = tableName + "." + columnName;
+                        }
+                    }
+                }
+                if (term2.matches(".*[a-zA-Z].*")) {
+                    if (term2.contains(".")) {
+                        String[] term2Parts = term2.split("\\.");
+                        if (term2Parts.length == 2) {
+                            String tableAlias = term2Parts[0].trim();
+                            String columnName = term2Parts[1].trim();
+                            String tableName = tableAliasMap.get(tableAlias);
+                            if (tableName == null) {
+                                System.err.println("Table alias not found: " + tableAlias);
+                                return;
+                            }
+                            term2 = tableName + "." + columnName;
+                        }
+                    }
+                }
+                conditions[i] = term1 + operator + term2;
+            }
+        }
+        if (tables.length == 1) {
+            dbManager.SelectRecords(columns, tables[0], conditions);
+        } else {
+            dbManager.SelectRecordsMultiTable(columns, tables, conditions);
+        }
         
     }
+    /**
+     * Méthode pour traiter la commande SELECTINDEX
+     * @param command Commande de l'utilisateur
+     */
     private void processSelectIndexCommand(String command) { //Omar AMARA 12/16/2024
         // Format attendu : SELECTINDEX * FROM nomRelation WHERE nomColonne=valeur
         String[] parts = command.split(" ");
@@ -266,7 +400,11 @@ public class SGBD {
 
     }
 
-
+    /**
+     * Méthode pour traiter la commande CREATEINDEX
+     * Crée un index sur une colonne d'une relation
+     * @param command Commande de l'utilisateur
+     */
     private void processCreateIndexCommand(String command) {//Omar AMARA 12/16/2024
         String[] parts = command.split(" ");
         if (parts.length != 5) {
@@ -278,20 +416,20 @@ public class SGBD {
         String columnName = parts[3].split("=")[1];
         int order = Integer.parseInt(parts[4].split("=")[1]);
 
-        // Get the Relation object
+        // Recupérer la relation
         Relation relation = dbManager.getTableFromCurrentDatabase(relationName);
         if (relation == null) {
             System.err.println("Relation " + relationName + " not found.");
             return;
         }
 
-        // Check if the column exists in the relation
+        // Verifier si la colonne existe
         if (!relation.hasColumn(columnName)) {
             System.err.println("Column " + columnName + " not found in relation " + relationName);
             return;
         }
 
-        // Get all records and record IDs from the relation
+        // Récupérer les records et les recordIds
         List<Record> records = relation.GetAllRecords();
         List<RecordId> recordIds = relation.GetAllRecordIds();
 
@@ -300,16 +438,16 @@ public class SGBD {
         indexManager.createIndex(relationName, columnName, order, records, recordIds, relation);
     }
 
-
-
-
+    /**
+     * Méthode principale pour lancer le programme avec un fichier de configuration
+     */
     public static void main(String[] args) {
-        // if (args.length != 1) {
-        //     System.err.println("Usage: java SGBD <config-file-path>");
-        //     System.exit(1);
-        // }
-        // String configFilePath = args[0];
-        String configFilePath = "./files/dataset_1.json";
+        if (args.length != 1) {
+              System.err.println("Usage: java SGBD <config-file-path>");
+              System.exit(1);
+        }
+        
+        String configFilePath = args[0];
         DBConfig dbConfig = new DBConfig(configFilePath);
         SGBD sgbd = new SGBD(dbConfig);
         sgbd.run();

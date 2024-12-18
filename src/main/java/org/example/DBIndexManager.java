@@ -3,15 +3,30 @@ package org.example;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-//Omar AMARA 12/16/2024
+/**
+ * Classe pour gérer les index de la base de données.
+ * Les index sont stockés dans une structure de données de type B+Tree.
+ * Auteur : Omar AMARA
+ * Date : 16/12/2024
+ */
 public class DBIndexManager {
     // Map relation -> colonne -> index
     private final Map<String, Map<String, BPlusTree>> indexes;
-
+    /**
+     * Constructeur de la classe DBIndexManager
+     */
     public DBIndexManager() {
         this.indexes = new HashMap<>();
     }
-
+    /**
+     * Crée un index sur une colonne d'une relation.
+     * @param relationName Nom de la relation
+     * @param columnName Nom de la colonne
+     * @param order Ordre de l'index
+     * @param records Liste des enregistrements
+     * @param recordIds Liste des identifiants d'enregistrement
+     * @param relation Relation
+     */
     public void createIndex(String relationName, String columnName, int order, List<Record> records, List<RecordId> recordIds, Relation relation) {
         indexes.putIfAbsent(relationName, new HashMap<>());
 
@@ -29,15 +44,18 @@ public class DBIndexManager {
 
         // Populate the index
         for (int i = 0; i < records.size(); i++) {
-            Object key = records.get(i).getValeurs().get(columnIndex); // Get the value for the column
-            index.insert(recordIds.get(i), key); // Insert RecordId with the key
+            Object key = records.get(i).getValeurs().get(columnIndex); // Recupère la valeur de la colonne
+            index.insert(recordIds.get(i), key); // Insère la valeur dans l'index
         }
 
         indexes.get(relationName).put(columnName, index);
-        //System.out.println("Index created on " + relationName + "." + columnName + " with order " + order);
     }
 
-
+    /**
+     * Recupère un index sur une colonne d'une relation.
+     * @param relationName Nom de la relation
+     * @param columnName Nom de la colonne
+     */
     public BPlusTree getIndex(String relationName, String columnName) {
         if (!indexes.containsKey(relationName) || !indexes.get(relationName).containsKey(columnName)) {
             throw new IllegalArgumentException("Index not found for the specified column.");

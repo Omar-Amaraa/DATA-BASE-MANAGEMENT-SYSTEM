@@ -1,20 +1,36 @@
 package org.example;
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
-
-public class BufferManager implements Serializable {
-    private static final long serialVersionUID = 1L;
+/**
+ * 
+ * BufferManager class
+ * 
+ * Cette classe représente le BufferManager qui gère les buffers dans le BufferPool et les pages dans le DiskManager.
+ * 
+ * Auteur: CHAU Thi, Zineb Fennich, Omar AMARA
+ */
+public class BufferManager {
     private static DBConfig dbConfiginstance;
     private static DiskManager diskManager;
     private static final List<Buffer> bufferPool = new LinkedList<>();
-
+    /**
+     * Constructeur de la classe BufferManager
+     * @param dbConfiginstance
+     * @param diskManager
+     */
     public BufferManager(DBConfig dbConfiginstance, DiskManager diskManager) {
         BufferManager.dbConfiginstance = dbConfiginstance;
         BufferManager.diskManager = diskManager;
     }
 
-    // Fonction pour obtenir une page depuis le buffer
+    /**
+     * Retourne une page depuis le buffer
+     * Si la page est déjà dans le buffer, on la retourne
+     * Sinon, on la charge depuis le disque
+     * Si la taille du buffer est atteinte, on doit remplacer une page
+     * @param pageId : identifiant de la page
+     * @return Buffer : contenu de la page
+     */
     public Buffer getPage(PageId pageId) {
         Buffer retbuffer = null;
         // Si la page est deja dans le buffer, on la retourne
@@ -25,11 +41,9 @@ public class BufferManager implements Serializable {
             }
         }
         if (retbuffer != null) {// Si la page est dans le buffer, on la met à jour dans la queue MRU -> LRU
-            retbuffer.setPinCount(retbuffer.getPinCount() + 1);
-            bufferPool.remove(retbuffer);
-            bufferPool.addFirst(retbuffer);
-            // System.out.println("La page est dans le buffer et mise à jour dans la queue MRU -> LRU\n");
-            // System.out.println("Queue: "+bufferPool.toString());
+            retbuffer.setPinCount(retbuffer.getPinCount() + 1);// On incrémente le pin_count
+            bufferPool.remove(retbuffer);// On enlève la page de la queue
+            bufferPool.addFirst(retbuffer);// On ajoute la page en tête de queue
             return retbuffer;
         }
 
@@ -37,27 +51,23 @@ public class BufferManager implements Serializable {
         retbuffer = new Buffer(pageId, 1, false);
         diskManager.ReadPage(pageId, retbuffer.getContenu());
         bufferPool.addFirst(retbuffer);
-        // System.out.println("La page" + retbuffer.getPageId().toString() + "est chargée dans pool depuis le disque\n");
-        // System.out.println("La page" + pageId.toString() + "est ajoutée dans la queue MRU -> LRU\n");
-        // System.out.println("Queue: " + bufferPool.toString());
+        
         
         // Si la taille du buffer est atteinte, on doit remplacer une page
-        if (bufferPool.size() >= dbConfiginstance.getBm_buffercount()) {
-            Buffer removedBuffer;
-            if (dbConfiginstance.getBm_policy().equals("LRU")) {
-                removedBuffer = bufferPool.removeLast();
-                // System.out.println("Buffer est plein et on doit remplacer la page"+removedBuffer.getPageId().getPageIdx() +"avec la politique LRU\n");
-                // System.out.println("Queue: " + bufferPool.toString());
+        if (bufferPool.size() >= DBConfig.getBm_buffercount()) {
+            if (DBConfig.getBm_policy().equals("LRU")) {
+                bufferPool.removeLast();
             } else {
-                removedBuffer = bufferPool.removeFirst();
-                // System.out.println("Buffer est plein et on doit remplacer la page"+removedBuffer.getPageId().getPageIdx() +"avec la politique LRU\n");
-                // System.out.println("Queue: " + bufferPool.toString());
+                bufferPool.removeFirst();
             }
         }
         return retbuffer;
 
     }
-    // Libère une page, décrémente le pin_count et met à jour le flag dirty
+    /**
+     * Libère une page du buffer
+     * @param pageId
+     */
     public void FreePage(PageId pageId, boolean valdirty) {
         Buffer buffer_iter;
         Buffer freedbuffer = null;
@@ -70,7 +80,7 @@ public class BufferManager implements Serializable {
                     buffer_iter.setPinCount(buffer_iter.getPinCount() - 1);
                 }
 
-                // On met à jour le flag dirty si nécessaire (je suis pas sur de cette partie)
+                // On met à jour le flag dirty si nécessaire
                 if (valdirty) {
                     buffer_iter.setDirtyFlag(valdirty);
                 }
@@ -79,7 +89,7 @@ public class BufferManager implements Serializable {
             }
         }
         if (freedbuffer == null) {
-            System.out.println("La page n'est pas dans le buffer");
+            // Si la page n'est pas dans le buffer, on ne fait rien
             return;
         }
         bufferPool.remove(freedbuffer);
@@ -91,13 +101,23 @@ public class BufferManager implements Serializable {
             }
         }
     }
+    /**
+     * Remplace la politique de remplacement actuelle par une nouvelle
+     * 
+     * @param policy : politique de remplacement
+     */
     public void setCurrentReplacementPolicy(String policy){ 
-        if(policy.equals(dbConfiginstance.getBm_policy())){
-            System.out.println("La politique de remplacement est déjà "+policy);
+        if(policy.equals(DBConfig.getBm_policy())){
+            // Si la politique est la même, on ne fait rien
         } else {
-            dbConfiginstance.setBm_policy(policy);
+            DBConfig.setBm_policy(policy);
         }
     }
+    /**
+     * Vide les buffers
+     * Ecrit les buffers sales sur le disque
+     * 
+     */
     public void FlushBuffers() {
         for (Buffer buffer : bufferPool) {
             if (buffer.getDirtyFlag()) {
@@ -106,6 +126,9 @@ public class BufferManager implements Serializable {
         }
         bufferPool.clear();
     }
+    /**
+     * Affiche les buffers
+     */
     public void getBufferpool(){
         for(Buffer i: bufferPool){
             System.out.println(i.getPageId().toString());

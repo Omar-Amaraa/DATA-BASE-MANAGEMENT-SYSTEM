@@ -53,7 +53,7 @@ public class BufferManagerTest {
 
     }
     public static void main(String[] args) {
-        DBConfig config = DBConfig.LoadDBConfig("./files/dataset_1.json");
+        DBConfig config = DBConfig.LoadDBConfig("./configDB.json");
         DiskManager dm = new DiskManager(config);
         BufferManager bm = new BufferManager(config, dm);
         TestReplacementPolicy(bm, dm,config);//Tester remplacement des pages
