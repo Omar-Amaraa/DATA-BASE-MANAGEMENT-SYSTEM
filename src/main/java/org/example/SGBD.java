@@ -442,12 +442,12 @@ public class SGBD {
      * Méthode principale pour lancer le programme avec un fichier de configuration
      */
     public static void main(String[] args) {
-        // if (args.length != 1) {
-        //      System.err.println("Usage: java SGBD <config-file-path>");
-        //      System.exit(1);
-        // }
+        if (args.length != 1) {
+              System.err.println("Usage: java SGBD <config-file-path>");
+              System.exit(1);
+        }
         
-        String configFilePath = "configDB.json";
+        String configFilePath = args[0];
         DBConfig dbConfig = new DBConfig(configFilePath);
         SGBD sgbd = new SGBD(dbConfig);
         sgbd.run();
