@@ -1,4 +1,4 @@
-# PROJET_BDDA_alpha
+# PROJET BDDA
 Ce projet a pour objectif la mise en place d’une base de données simple (un « mini SGBD ») dans le cadre de notre UE de Base de données avancées. Il inclut des fonctionnalités telles que :
 Gestion des pages disque
 Gestion des buffers
@@ -10,6 +10,7 @@ Fichiers de configuration et scripts d’exécution
 ## Arborescence du Projet
 PROJET_BDDA_alpha/
 - lib/
+  - json-simple-1.1.1.jar
 - src/
   - main/java/org/example/
     - BPlusTree.java
@@ -40,13 +41,16 @@ PROJET_BDDA_alpha/
   - test/java/
     - BPlusTreeTest.java
     - BufferManagerTest.java
+    - ConditionTest.java
     - DBConfigTest.java
     - DatabaseTest.java
     - DBManagerTest.java
     - DiskManagerTests.java
+    - IteratorTest.java
     - RelationTest.java
     - SGBDTest.java
-- .gitignore
+    
+- configDB.json
 - MiniSGBD.bat
 - MiniSGBD.sh
 
