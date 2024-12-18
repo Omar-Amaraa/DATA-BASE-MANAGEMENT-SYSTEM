@@ -52,7 +52,7 @@ public class DiskManager implements Serializable {
                 // Créer le fichier s'il n'existe pas
 
                 if (file.createNewFile()) {
-                    System.out.println("Fichier binaire vide a été créé à : " + path);
+                    //System.out.println("Fichier binaire vide a été créé à : " + path);
                     countFiles++;
                 }
             } catch (IOException e) {
@@ -115,7 +115,7 @@ public class DiskManager implements Serializable {
             // oos.close();
             //System.out.println("State est enregistre " + saveFile.getAbsolutePath());
         } catch (IOException e) {
-            System.err.println("Error saving state to dm.save: " + e.getMessage());
+            //System.err.println("Error saving state to dm.save: " + e.getMessage());
         }
 
     }
@@ -138,7 +138,7 @@ public class DiskManager implements Serializable {
                 //System.err.println("Error load state from dm.save: " + e.getMessage());
             }
         } else {
-            System.out.println("Le fichier n'existe pas " + saveFile.getAbsolutePath());
+            //System.out.println("Le fichier n'existe pas " + saveFile.getAbsolutePath());
         }
 
     }
@@ -156,7 +156,7 @@ public class DiskManager implements Serializable {
             // fileChannel.close();
             // raf.close();
         }catch(IOException e){
-            System.err.println("Error writing page "+p.getPageIdx()+" to F"+p.getFileIdx()+".rsdb \n"+e.getMessage());
+            //System.err.println("Error writing page "+p.getPageIdx()+" to F"+p.getFileIdx()+".rsdb \n"+e.getMessage());
         }
     }
     //Methode pour lire une page
@@ -176,7 +176,7 @@ public class DiskManager implements Serializable {
             }
             return bytesRead;
         } catch (IOException e) {
-            System.err.println("Error read page "+p.getPageIdx()+" from F"+p.getFileIdx()+".rsdb \n"+e.getMessage());
+            //System.err.println("Error read page "+p.getPageIdx()+" from F"+p.getFileIdx()+".rsdb \n"+e.getMessage());
             return -1;
         }
     }

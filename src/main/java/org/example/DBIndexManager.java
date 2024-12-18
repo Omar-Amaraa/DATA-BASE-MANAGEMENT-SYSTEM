@@ -34,7 +34,7 @@ public class DBIndexManager {
         }
 
         indexes.get(relationName).put(columnName, index);
-        System.out.println("Index created on " + relationName + "." + columnName + " with order " + order);
+        //System.out.println("Index created on " + relationName + "." + columnName + " with order " + order);
     }
 
 
