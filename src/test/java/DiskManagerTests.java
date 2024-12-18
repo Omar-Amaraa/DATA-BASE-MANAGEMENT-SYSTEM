@@ -51,7 +51,7 @@ public class DiskManagerTests {
         System.out.println("LoadSate. Free pages: " + dm.getFreePages());
     }
     public static void main(String[] args) {
-        DBConfig config = DBConfig.LoadDBConfig("./configDB.json");
+        DBConfig config = DBConfig.LoadDBConfig("./files/dataset_1.json");
         DiskManager dm = new DiskManager(config);
 
         // allouer une page

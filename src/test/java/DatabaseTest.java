@@ -9,7 +9,7 @@ import org.example.DiskManager;
 import org.example.Relation;
 
 public class DatabaseTest {
-    static DBConfig config = DBConfig.LoadDBConfig("./configDB.json");
+    static DBConfig config = DBConfig.LoadDBConfig("./files/dataset_1.json");
     static DiskManager dm = new DiskManager(config);
     static BufferManager bm = new BufferManager(config, dm);
 
