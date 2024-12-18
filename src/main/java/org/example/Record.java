@@ -36,7 +36,14 @@ public class Record {
     public void ajouterValeur(Object valeur) {
         valeurs.add(valeur);
     }
-
+    @Override
+    public String toString() {
+        String resultat="";
+        for (Object valeur : valeurs) {
+            resultat+=valeur+" ; ";
+        }
+        return resultat;
+    }
 
 }
 

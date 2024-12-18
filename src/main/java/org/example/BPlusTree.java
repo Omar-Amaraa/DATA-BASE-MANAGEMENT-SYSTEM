@@ -1,6 +1,5 @@
 package org.example;
 
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -207,7 +206,6 @@ class BPlusTree {
         }
 
         List<RecordId> result = new ArrayList<>();
-        //System.out.println("search: Starting search for key: " + key);
 
         // Parcourir les noeuds feuilles pour trouver la clé
         while (leaf != null) {
@@ -219,10 +217,6 @@ class BPlusTree {
             }
             leaf = leaf.next; // Deplacer au noeud feuille suivant
         }
-
-        System.out.println("Total records " + result.size());
         return result;
     }
-   
-    
 }
