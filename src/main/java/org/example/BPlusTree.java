@@ -11,7 +11,7 @@ import java.util.List;
  * Auteur: Omar AMARA
  * Date: 16/12/2024
  */
-class BPlusTree {
+public class BPlusTree {
     
     private BPlusTreeNode root; // Racine de l'arbre
     private final int order; // Nombre maximum de clés par noeud
