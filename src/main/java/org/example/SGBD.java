@@ -243,8 +243,8 @@ public class SGBD {
             System.err.println("Index on column " + columnName + " for relation " + relationName + " does not exist.");
             return;
         }
-        // Debug: Key being searched
-        System.out.println("Searching index for key: " + value);
+
+
         // Rechercher dans l'index
         List<RecordId> matchingRecordIds = index.search(value);
 
@@ -255,10 +255,15 @@ public class SGBD {
 
         // Afficher les records correspondants
         Relation table = dbManager.getTableFromCurrentDatabase(relationName);
+        int i =0;
         for (RecordId rid : matchingRecordIds) {
             Record record = table.getRecordById(rid); // Ajoutez une méthode pour récupérer un record via RecordId
-            System.out.println(record.getValeurs());
+            System.out.println(record.toString());
+            i++;
         }
+        System.out.println("B+ search : Total records : " + i);
+
+
     }
 
 
