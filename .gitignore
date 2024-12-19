@@ -50,3 +50,5 @@ BinData/
 *.csv
 *.save
 *.rsdb
+*.txt
+*.out*
