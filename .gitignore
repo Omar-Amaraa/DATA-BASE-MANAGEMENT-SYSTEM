@@ -12,6 +12,14 @@ target/
 *.iws
 *.iml
 *.ipr
+# Ignorer tous les fichiers .class
+*.class
+
+# Ignorer les répertoires de build
+/target/
+/bin/
+/out/
+
 
 ### Eclipse ###
 .apt_generated
