@@ -59,6 +59,7 @@ public class SGBD {
                 case "DROP" -> {
                     switch (parts[1].toUpperCase()) {
                         case "TABLE" -> processDropTableCommand(command);
+                        case "TABLES" -> processDropAllTablesCommand();
                         case "DATABASE" -> processDropDatabaseCommand(command);
                         case "DATABASES" -> processDropAllDatabasesCommand();
                         default -> System.out.println("Invalid command: " + command);
@@ -166,6 +167,12 @@ public class SGBD {
         }
         String tableName = parts[2];
         dbManager.RemoveTableFromCurrentDatabase(tableName);
+    }
+    /**
+     * Méthode pour traiter la commande DROP TABLES
+     */
+    public void processDropAllTablesCommand() {
+        dbManager.RemoveAllTablesFromCurrentDatabase();
     }
     /**
      * Méthode pour traiter la commande DROP DATABASE
@@ -443,10 +450,10 @@ public class SGBD {
      */
     public static void main(String[] args) {
         if (args.length != 1) {
-              System.err.println("Usage: java SGBD <config-file-path>");
-              System.exit(1);
+            System.err.println("Usage: java SGBD <config-file-path>");
+            System.exit(1);
         }
-        
+      
         String configFilePath = args[0];
         DBConfig dbConfig = new DBConfig(configFilePath);
         SGBD sgbd = new SGBD(dbConfig);

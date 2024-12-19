@@ -89,6 +89,13 @@ public class DBManager {
         }
         this.courammentDatabase.removeTable(this.courammentDatabase.indexOfTable(nomTable));
     }
+    
+    public void RemoveAllTablesFromCurrentDatabase() {
+        if (this.courammentDatabase == null) {
+            System.out.println("No database selected");
+        }
+        this.courammentDatabase.removeAllTables();
+    }
     /** 
      * Fonction pour supprimer une base de données
      * @param nomBdd Nom de la base de données
