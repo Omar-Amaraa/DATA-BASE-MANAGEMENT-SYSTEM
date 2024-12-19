@@ -66,11 +66,11 @@ public class Condition {
             }
         } else { // <number>
             if (left.contains(".")) { // real number
-                this.term1 = Float.parseFloat(left);
+                this.term1 = Float.valueOf(left);
                 this.isTerm1Column = false;
                 this.term1Type = ColType.REAL;
             } else { // integer
-                this.term1 = Integer.parseInt(left);
+                this.term1 = Integer.valueOf(left);
                 this.isTerm1Column = false;
                 this.term1Type = ColType.INT;
             }
@@ -100,11 +100,11 @@ public class Condition {
             }
         } else { // <number>
             if (right.contains(".")) { // real number
-                this.term2 = Float.parseFloat(right);
+                this.term2 = Float.valueOf(right);
                 this.isTerm2Column = false;
                 this.term2Type = ColType.REAL;
             } else { // integer
-                this.term2 = Integer.parseInt(right);
+                this.term2 = Integer.valueOf(right);
                 this.isTerm2Column = false;
                 this.term2Type = ColType.INT;
             }
@@ -126,9 +126,9 @@ public class Condition {
             return evaluateString((String)this.term1, (String)this.term2);
         } else if (this.term1Type != ColType.CHAR && this.term2Type != ColType.CHAR) {
             if (this.term1Type == ColType.REAL || this.term2Type == ColType.REAL) {
-                return evaluateFloat((float)this.term1, (float)this.term2);
+                return evaluateFloat(((Number)this.term1).floatValue(), ((Number)this.term2).floatValue());
             } else {
-                return evaluateInt((int)this.term1, (int)this.term2);
+                return evaluateInt(((Number)this.term1).intValue(), ((Number)this.term2).intValue());
             }
         } else {
             return false;
