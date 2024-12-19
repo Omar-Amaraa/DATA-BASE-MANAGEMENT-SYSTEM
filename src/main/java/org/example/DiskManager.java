@@ -202,7 +202,7 @@ public class DiskManager {
      * @param buff Le tampon contenant les données à écrire.
      */
     public void WritePage(PageId p, ByteBuffer buff) {
-        String path = "./BinData/" + "F" + p.getFileIdx() + ".rsdb";
+        String path = DBConfig.getDbpath() + "/F" + p.getFileIdx() + ".rsdb";
         try (RandomAccessFile raf = new RandomAccessFile(path, "rw");
              FileChannel fileChannel = raf.getChannel()) {
             buff.rewind();

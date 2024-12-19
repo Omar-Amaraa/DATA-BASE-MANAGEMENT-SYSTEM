@@ -47,4 +47,6 @@ build/
 .DS_Store
 
 BinData/
-test.txt
+*.csv
+*.save
+*.rsdb
