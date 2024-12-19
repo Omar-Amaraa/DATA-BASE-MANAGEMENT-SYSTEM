@@ -230,7 +230,6 @@ public class SGBD {
         }
         String tableName = parts[2];
         String filePath = parts[3];
-        int count = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -239,7 +238,6 @@ public class SGBD {
                     continue;
                 }
                 dbManager.InsertRecordIntoTable(tableName, values);
-                count++;
             }
         } catch (IOException e) {
             System.err.println("Error reading csv file: " + e.getMessage());
@@ -268,33 +266,29 @@ public class SGBD {
         // Convert tables to dictionary
         HashMap<String, String> tableAliasMap = new HashMap<>();
         for (String table : tables) {
-            String[] tableParts = table.trim().split(" ");
+            String[] tableParts = table.trim().split(" "); 
+            // tableParts[0] = table-name, tableParts[1] = table-alias
             if (tableParts.length != 2) {
-            System.err.println("Invalid table definition: " + table);
-            return;
+                System.err.println("Invalid table definition: " + table);
+                return;
             }
             tableAliasMap.put(tableParts[1], tableParts[0]);
         }
-        for (int i = 0; i < tables.length; i++) {
-            String[] tableParts = tables[i].trim().split(" ");
-            tables[i] = tableParts[0];
-        }
         String[] conditions = wheresplit.length > 1 ? wheresplit[1].trim().split("AND") : null;
         if (!columns[0].equals("*")) {
-            for (int i = 0; i < columns.length; i++) {
-                String[] parts = columns[i].trim().split("\\.");
+            for (String column : columns) {
+                String[] parts = column.trim().split("\\."); 
+                // parts[0] = table-alias, parts[1] = column-name
                 if (parts.length != 2) {
-                    System.err.println("Invalid column name: " + columns[i]);
+                    System.err.println("Invalid column name: " + column);
                     return;
                 }
                 String tableAlias = parts[0].trim();
-                String columnName = parts[1].trim();
                 String tableName = tableAliasMap.get(tableAlias);
                 if (tableName == null) {
                     System.err.println("Table alias not found: " + tableAlias);
                     return;
                 }
-                columns[i] = tableName + "." + columnName;
             }
         }
         //Convetir conditions en format <term1><operator><term2>
@@ -324,13 +318,11 @@ public class SGBD {
                         String[] term1Parts = term1.split("\\.");
                         if (term1Parts.length == 2) {
                             String tableAlias = term1Parts[0].trim();
-                            String columnName = term1Parts[1].trim();
                             String tableName = tableAliasMap.get(tableAlias);
                             if (tableName == null) {
                                 System.err.println("Table alias not found: " + tableAlias);
                                 return;
                             }
-                            term1 = tableName + "." + columnName;
                         }
                     }
                 }
@@ -339,13 +331,11 @@ public class SGBD {
                         String[] term2Parts = term2.split("\\.");
                         if (term2Parts.length == 2) {
                             String tableAlias = term2Parts[0].trim();
-                            String columnName = term2Parts[1].trim();
                             String tableName = tableAliasMap.get(tableAlias);
                             if (tableName == null) {
                                 System.err.println("Table alias not found: " + tableAlias);
                                 return;
                             }
-                            term2 = tableName + "." + columnName;
                         }
                     }
                 }
@@ -452,8 +442,8 @@ public class SGBD {
         if (args.length != 1) {
             System.err.println("Usage: java SGBD <config-file-path>");
             System.exit(1);
-        }
-      
+        } 
+
         String configFilePath = args[0];
         DBConfig dbConfig = new DBConfig(configFilePath);
         SGBD sgbd = new SGBD(dbConfig);
