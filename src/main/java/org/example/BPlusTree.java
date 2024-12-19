@@ -20,8 +20,8 @@ public class BPlusTree {
      * @param order
      */
     public BPlusTree(int order) {
-        if (order < 3) {
-            throw new IllegalArgumentException("Ordre de l'arbre B+ doit être au moins 3");
+        if (order < 2) {
+            throw new IllegalArgumentException("Ordre de l'arbre B+ doit être au moins 2");
         }
         this.root = new BPlusTreeNode(true);
         this.order = order;
