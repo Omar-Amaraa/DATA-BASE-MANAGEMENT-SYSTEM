@@ -82,7 +82,7 @@ public class SGBD {
      * Méthode pour traiter la commande CREATE DATABASE
      * @param command Commande de l'utilisateur
      */
-    private void processCreateDBCommand(String command) {
+    public void processCreateDBCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
             System.err.println("Usage: CREATE DATABASE <db-name>");
@@ -95,7 +95,7 @@ public class SGBD {
      * Méthode pour traiter la commande CREATE TABLE
      * @param command Commande de l'utilisateur
      */
-    private void processCreateTableCommand(String command) {
+    public void processCreateTableCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 4) {
             System.err.println("Usage: CREATE TABLE <table-name> (<column-definitions>)");
@@ -133,7 +133,7 @@ public class SGBD {
      * Méthode pour traiter la commande SET DATABASE
      * @param command Commande de l'utilisateur
      */
-    private void processSetDBCommand(String command) {
+    public void processSetDBCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
             System.err.println("Usage: SET DATABASE <db-name>");
@@ -145,20 +145,20 @@ public class SGBD {
     /**
      * Méthode pour traiter la commande LIST TABLES
      */
-    private void processListTablesCommand() {
+    public void processListTablesCommand() {
         dbManager.ListTablesInCurrentDatabase();
     }   
     /**
      * Méthode pour traiter la commande LIST DATABASES
      */
-    private void processListDatabasesCommand() {
+    public void processListDatabasesCommand() {
         dbManager.ListDatabases();
     }
     /**
      * Méthode pour traiter la commande DROP TABLE
      * @param command Commande de l'utilisateur
      */
-    private void processDropTableCommand(String command) {
+    public void processDropTableCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
             System.err.println("Usage: DROP TABLE <table-name>");
@@ -171,7 +171,7 @@ public class SGBD {
      * Méthode pour traiter la commande DROP DATABASE
      * @param command Commande de l'utilisateur
      */
-    private void processDropDatabaseCommand(String command) {
+    public void processDropDatabaseCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 3) {
             System.err.println("Usage: DROP DATABASE <db-name>");
@@ -183,7 +183,7 @@ public class SGBD {
     /**
      * Méthode pour traiter la commande DROP DATABASES
      */
-    private void processDropAllDatabasesCommand() {
+    public void processDropAllDatabasesCommand() {
         dbManager.RemoveDatabases();
     }
     /**
@@ -191,7 +191,7 @@ public class SGBD {
      * Sauvegarde l'état de la base de données, l'état de Disk et quitte le programme
      * @param command Commande de l'utilisateur
      */
-    private void processQuitCommand() {
+    public void processQuitCommand() {
         dbManager.SaveState();
         diskManager.SaveState();
     }
@@ -200,7 +200,7 @@ public class SGBD {
      * Méthode pour traiter la commande INSERT INTO
      * @param command Commande de l'utilisateur
      */
-    private void processInsertIntoCommand(String command) {
+    public void processInsertIntoCommand(String command) {
         String parts[] = command.split(" ");
         if (parts.length != 5) {
             System.err.println("Usage: INSERT INTO <table-name> VALUES (<value1>,<value2>,...)");
@@ -215,7 +215,7 @@ public class SGBD {
      * Méthode pour traiter la commande BULKINSERT qui permet inserer des records d'un fichier csv
      * @param command Commande de l'utilisateur
      */
-    private void processBulkInsertCommand(String command) {
+    public void processBulkInsertCommand(String command) {
         String[] parts = command.split(" ");
         if (parts.length != 4) {
             System.err.println("Usage: BULKINSERT INTO <table-name> <file-path>");
@@ -242,7 +242,7 @@ public class SGBD {
      * Méthode pour traiter la commande SELECT
      * @param command Commande de l'utilisateur
      */
-    private void processSelectCommand(String command) {
+    public void processSelectCommand(String command) {
         String fromsplit[] = command.split("FROM");
         if (fromsplit.length < 2) {
             System.err.println("Usage: SELECT <table-alias>.<column-name1>,<table-alias>.<column-name2>,... " +
@@ -356,7 +356,7 @@ public class SGBD {
      * Méthode pour traiter la commande SELECTINDEX
      * @param command Commande de l'utilisateur
      */
-    private void processSelectIndexCommand(String command) { //Omar AMARA 12/16/2024
+    public void processSelectIndexCommand(String command) { //Omar AMARA 12/16/2024
         // Format attendu : SELECTINDEX * FROM nomRelation WHERE nomColonne=valeur
         String[] parts = command.split(" ");
         if (parts.length != 6) {
@@ -405,7 +405,7 @@ public class SGBD {
      * Crée un index sur une colonne d'une relation
      * @param command Commande de l'utilisateur
      */
-    private void processCreateIndexCommand(String command) {//Omar AMARA 12/16/2024
+    public void processCreateIndexCommand(String command) {//Omar AMARA 12/16/2024
         String[] parts = command.split(" ");
         if (parts.length != 5) {
             System.err.println("Usage: CREATEINDEX ON <relation-name> KEY=<column-name> ORDER=<order>");

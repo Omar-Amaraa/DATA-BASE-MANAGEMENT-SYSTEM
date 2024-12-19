@@ -1,18 +1,17 @@
-import org.example.SGBD;
 import org.example.DBConfig;
+import org.example.SGBD;
 
 public class SGBDTest {
 
+    
     public static void main(String[] args) {
         // Configuration path
-        String configFilePath = "./files/dataset_1.json";
+        String configFilePath = "./configDB.json";
 
         // Initialize DBConfig and SGBD
         DBConfig dbConfig = new DBConfig(configFilePath);
         SGBD sgbd = new SGBD(dbConfig);
 
-        // Clean up any existing databases
-        cleanupDatabases(sgbd);
 
         // Create a database
         createDatabase(sgbd, "testDB");
@@ -31,8 +30,11 @@ public class SGBDTest {
         // Select records
         select(sgbd, "col1", "newTable");
 
+
         // Quit
         quit(sgbd);
+        // Cleanup
+        cleanupDatabases(sgbd);
     }
 
     private static void cleanupDatabases(SGBD sgbd) {
