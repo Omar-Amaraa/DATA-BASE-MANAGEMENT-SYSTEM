@@ -54,11 +54,15 @@ public class BufferManager {
         
         
         // Si la taille du buffer est atteinte, on doit remplacer une page
-        if (bufferPool.size() >= DBConfig.getBm_buffercount()) {
+        if (bufferPool.size() > DBConfig.getBm_buffercount()) {
+            Buffer deletedBuffer;
             if (DBConfig.getBm_policy().equals("LRU")) {
-                bufferPool.removeLast();
+                deletedBuffer=bufferPool.removeLast();
             } else {
-                bufferPool.removeFirst();
+                deletedBuffer=bufferPool.removeFirst();
+            }
+            if (deletedBuffer.getDirtyFlag()) {
+                diskManager.WritePage(deletedBuffer.getPageId(), deletedBuffer.getContenu());
             }
         }
         return retbuffer;
