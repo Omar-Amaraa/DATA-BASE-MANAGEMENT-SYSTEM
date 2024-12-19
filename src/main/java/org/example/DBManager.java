@@ -229,7 +229,8 @@ public class DBManager {
            System.out.println("No database selected");
            return;
         }
-        String tableName = table.trim();
+        String tableName = table.trim().split(" ")[0];
+        String tableAlias = table.trim().split(" ")[1];
         Relation tab = this.courammentDatabase.getTable(courammentDatabase.indexOfTable(tableName));
         if (tab == null) {
             System.out.println("Database " + table + " does not exist");
@@ -237,7 +238,7 @@ public class DBManager {
         // Récupérer toutes les colonnes de la table
         String[] touscolonnes = new String[tab.getColonnes().size()];
         for (int i = 0; i < tab.getColonnes().size(); i++) {
-            touscolonnes[i] = tab.getNomrelation() + "." + tab.getCol(i).getNom();
+            touscolonnes[i] = tableAlias + "." + tab.getCol(i).getNom();
         }
         int[] colonnesindexes;// Récupérer les index des colonnes
         if (columns.length == 1 && columns[0].equals("*")) {
@@ -260,7 +261,12 @@ public class DBManager {
         if (conditions != null) {
             conds = new Condition[conditions.length];
             for (int i = 0; i < conditions.length; i++) {
-                conds[i] = new Condition(conditions[i],touscolonnes,tab.getColonnes());
+                try {
+                    conds[i] = new Condition(conditions[i],touscolonnes,tab.getColonnes());    
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
+                    return;
+                }            
             }
         } else {
             conds = new Condition[0];
@@ -283,31 +289,32 @@ public class DBManager {
             return;
         }
         // Récupérer toutes les colonnes de toutes les tables
+        String[] tableNames = new String[tables.length];
+        String[] tableAliases = new String[tables.length];
         Relation[] tabs = new Relation[tables.length];
         for (int i = 0; i < tables.length; i++) {
-            String tableName = tables[i].trim().split(" ")[0]; // Récupérer le nom de la table
-            tabs[i] = this.courammentDatabase.getTable(courammentDatabase.indexOfTable(tableName));
+            tableNames[i] = tables[i].trim().split(" ")[0]; // Récupérer le nom de la table
+            tableAliases[i] = tables[i].trim().split(" ")[1]; // Récupérer l'alias de la table
+            tabs[i] = this.courammentDatabase.getTable(courammentDatabase.indexOfTable(tableNames[i]));
             if (tabs[i] == null) {
                System.out.println("Database " + tables[i] + " does not exist");
             }
         }
-        int nbTousColonnes = 0;
-        for (Relation tab : tabs) { // Calculer le nombre total de colonnes
-            nbTousColonnes += tab.getColonnes().size();
-        }
-        String[] touscolonnes = new String[nbTousColonnes];// Créer un tableau pour stocker toutes les colonnes
-        int index = 0;
-        for (Relation tab : tabs) {
-            for (int i = 0; i < tab.getColonnes().size(); i++) {// Remplir le tableau avec les colonnes
-                touscolonnes[index] = tab.getNomrelation() + "." + tab.getCol(i).getNom();
-                index++;
-            }
-        }
-        // Récupérer les index des colonnes à sélectionner
+        // Récupérer les info des tous les colonnes à sélectionner
         List<ColInfo> allColInfos = new ArrayList<>();
         for (Relation tab : tabs) {
             allColInfos.addAll(tab.getColonnes());
         }
+        int nbTousColonnes = allColInfos.size();
+        String[] touscolonnes = new String[nbTousColonnes];// Créer un tableau pour stocker toutes les colonnes
+        int index = 0;
+        for (int i = 0; i < tabs.length; i++) {
+            for (int j = 0; j < tabs[i].getColonnes().size(); j++) {
+                touscolonnes[index] = tableAliases[i] + "." + tabs[i].getCol(j).getNom();
+                index++;
+            }
+        }
+        
         int[] colonnesindexes;
         if (columns.length == 1 && columns[0].equals("*")) {// Si on veut sélectionner toutes les colonnes
             colonnesindexes = new int[touscolonnes.length];
@@ -325,6 +332,7 @@ public class DBManager {
                 }
             }
         }
+        
         Condition[] conds;
         if (conditions != null) {
             conds = new Condition[conditions.length];
@@ -334,10 +342,8 @@ public class DBManager {
         } else {
             conds = new Condition[0];
         }
-        RelationScanner relationScanner0 = new RelationScanner(tabs[0]);// Créer un scanner pour la première table
-        RelationScanner relationScanner1 = new RelationScanner(tabs[1]);// Créer un scanner pour la deuxième table
-        PageOrientedJoinOperator joinOperator = new PageOrientedJoinOperator(relationScanner0, relationScanner1);// Créer un opérateur de jointure
-        for (int i = 2; i < tabs.length; i++) {// Ajouter les autres tables à la jointure
+        IRecordIterator joinOperator = new RelationScanner(tabs[0]);// Créer un scanner pour la première table
+        for (int i = 1; i < tabs.length; i++) {// Ajouter les autres tables à la jointure
             joinOperator = new PageOrientedJoinOperator(joinOperator, new RelationScanner(tabs[i]));
         }
         SelectOperator selectOperator = new SelectOperator(joinOperator, conds);
