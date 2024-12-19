@@ -116,22 +116,23 @@ public class Condition {
      * @return vrai si la condition est vérifiée, faux sinon
      */
     public boolean evaluate(Record row) {
-        if (this.term1Type != this.term2Type){
-            System.out.println("Error: incompatible types in condition");
-            return false;
-        }
         if (this.isTerm1Column) {
             this.term1 = row.getValeurs().get(this.term1Index);
         } 
         if (this.isTerm2Column) {
             this.term2 = row.getValeurs().get(this.term2Index);
         }
-        return switch (this.term1Type) {
-            case INT -> evaluateInt((int)this.term1, (int)this.term2);
-            case REAL -> evaluateFloat((float)this.term1, (float)this.term2);
-            case CHAR -> evaluateString((String)this.term1, (String)this.term2);
-            default -> false;
-        };
+        if (this.term1Type == ColType.CHAR && this.term2Type == ColType.CHAR) {
+            return evaluateString((String)this.term1, (String)this.term2);
+        } else if (this.term1Type != ColType.CHAR && this.term2Type != ColType.CHAR) {
+            if (this.term1Type == ColType.REAL || this.term2Type == ColType.REAL) {
+                return evaluateFloat((float)this.term1, (float)this.term2);
+            } else {
+                return evaluateInt((int)this.term1, (int)this.term2);
+            }
+        } else {
+            return false;
+        }
     }
     /**
      * Méthode evaluate pour les entiers
