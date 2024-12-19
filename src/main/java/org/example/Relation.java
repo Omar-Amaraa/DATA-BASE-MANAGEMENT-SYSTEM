@@ -224,7 +224,12 @@ public class Relation implements Serializable {
                     int taille = buffer.getInt(pos);
                     pos += Integer.BYTES;
                     for (int i = 0; i < taille; i++) {
-                        char c = buffer.getChar(pos);
+                        char c = '\0';
+                        try {
+                            c = buffer.getChar(pos);
+                        } catch (Exception e) {
+                            System.out.println("Erreur de lecture de la colonne " + colInfo.getNom() + " à la position " + pos);
+                        }
                         varcharValue.append(c);
                         pos += Character.BYTES;
                     }
@@ -279,7 +284,7 @@ public class Relation implements Serializable {
             int fileIdx = buff.getInt();
             int pageIdx = buff.getInt();
             int taillelibre = buff.getInt();
-            if(taillelibre >= sizeRecord+8){//+8 pour les 2 entiers(nb slot + position debut libre) de fin de page
+            if(taillelibre > sizeRecord+8){//+8 pour les 2 entiers(nb slot + position debut libre) de fin de page
                 return new PageId(fileIdx, pageIdx);
             }
         }
@@ -392,7 +397,8 @@ public class Relation implements Serializable {
                 case INT -> sizeRecord += Integer.BYTES;
                 case REAL -> sizeRecord += Float.BYTES;
                 case CHAR -> sizeRecord += Character.BYTES * colInfo.getTailleMax();
-                case VARCHAR -> sizeRecord += Character.BYTES * (((String) record.getValeurs().get(i)).length());
+                case VARCHAR -> sizeRecord += Character.BYTES * (((String) record.getValeurs().get(i)).length())+Integer.BYTES; 
+                //+Integer.BYTES pour la taille de la chaine
             }
             i++;
         }

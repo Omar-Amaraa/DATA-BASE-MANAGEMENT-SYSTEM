@@ -50,11 +50,9 @@ public class BufferManager {
         // Si la page n'est pas dans le buffer, on la charge depuis le disque avec methode readPage
         retbuffer = new Buffer(pageId, 1, false);
         diskManager.ReadPage(pageId, retbuffer.getContenu());
-        bufferPool.addFirst(retbuffer);
-        
         
         // Si la taille du buffer est atteinte, on doit remplacer une page
-        if (bufferPool.size() > DBConfig.getBm_buffercount()) {
+        if (bufferPool.size() >= DBConfig.getBm_buffercount()) {
             Buffer deletedBuffer;
             if (DBConfig.getBm_policy().equals("LRU")) {
                 deletedBuffer=bufferPool.removeLast();
@@ -65,6 +63,10 @@ public class BufferManager {
                 diskManager.WritePage(deletedBuffer.getPageId(), deletedBuffer.getContenu());
             }
         }
+
+        // On ajoute la page dans le buffer
+        bufferPool.addFirst(retbuffer);
+
         return retbuffer;
 
     }

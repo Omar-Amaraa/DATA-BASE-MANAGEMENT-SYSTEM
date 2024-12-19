@@ -25,7 +25,7 @@ public class Condition {
     /**
      * Constructeur de la classe Condition
      * @param condition : condition sous forme de chaîne de caractères
-     * @param colonnes : liste des noms des colonnes <table-name>.<column-name>
+     * @param colonnes : liste des noms des colonnes <table-alias>.<column-name>
      * @param colInfos : liste des informations correspond a les colonnes
      */
     public Condition(String condition,String[] colonnes,List<ColInfo> colInfos) {
@@ -47,7 +47,7 @@ public class Condition {
             this.isTerm1Column = false;
             this.term1Type = ColType.CHAR;
         } else if (left.matches(".*[a-zA-Z].*")) { // contient des caractères alphabétiques
-            if (left.contains(".")) { // <table-name>.<column-name>
+            if (left.contains(".")) { // <table-alias>.<column-name>
                 this.isTerm1Column = true;
                 for (int i = 0; i < colonnes.length; i++) {
                     if (colonnes[i].equals(left)) {
@@ -62,7 +62,7 @@ public class Condition {
                 }
             } else {
                 // lack of alias
-                System.out.println("Error: column name "+left+" in term1 must be prefixed by an alias");
+                throw new IllegalArgumentException("Error: column name "+left+" in term1 must be prefixed by an alias");
             }
         } else { // <number>
             if (left.contains(".")) { // real number
@@ -81,7 +81,7 @@ public class Condition {
             this.isTerm2Column = false;
             this.term2Type = ColType.CHAR;
         } else if (right.matches(".*[a-zA-Z].*")) { // contient des caractères alphabétiques
-            if (right.contains(".")) { // <alias>.<column-name>
+            if (right.contains(".")) { // <table-alias>.<column-name>
                 this.isTerm2Column = true;
                 for (int i = 0; i < colonnes.length; i++) {
                     if (colonnes[i].equals(right)) {
@@ -95,8 +95,8 @@ public class Condition {
                     }
                 }                
             } else {
-            // manque d'alias
-            System.out.println("Error: column name "+right+" in term2 must be prefixed by an alias");
+                // manque d'alias
+                throw new IllegalArgumentException("Error: column name "+right+" in term2 must be prefixed by an alias");
             }
         } else { // <number>
             if (right.contains(".")) { // real number
