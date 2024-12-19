@@ -221,6 +221,7 @@ public class DBManager {
     public void SelectRecords(String[] columns, String table, String[] conditions) {
         if (this.courammentDatabase == null) {
            System.out.println("No database selected");
+           return;
         }
         String tableName = table.trim();
         Relation tab = this.courammentDatabase.getTable(courammentDatabase.indexOfTable(tableName));

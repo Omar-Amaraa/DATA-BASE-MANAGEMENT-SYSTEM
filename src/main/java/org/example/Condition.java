@@ -85,7 +85,7 @@ public class Condition {
                 this.isTerm2Column = true;
                 for (int i = 0; i < colonnes.length; i++) {
                     if (colonnes[i].equals(right)) {
-                        this.term1=null;
+                        this.term2=null;
                         this.term2Index = i;
                         this.term2Type = colInfos.get(i).getType();
                         if (this.term2Type == ColType.VARCHAR) {
@@ -126,7 +126,6 @@ public class Condition {
         if (this.isTerm2Column) {
             this.term2 = row.getValeurs().get(this.term2Index);
         }
-
         return switch (this.term1Type) {
             case INT -> evaluateInt((int)this.term1, (int)this.term2);
             case REAL -> evaluateFloat((float)this.term1, (float)this.term2);

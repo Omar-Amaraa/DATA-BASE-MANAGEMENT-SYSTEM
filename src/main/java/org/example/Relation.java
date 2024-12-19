@@ -523,7 +523,6 @@ public class Relation implements Serializable {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(nomrelation);
-        sb.append(",Number of column=").append(nbcolonnes);
         sb.append(colonnes.toString());
         return sb.toString();
     }
