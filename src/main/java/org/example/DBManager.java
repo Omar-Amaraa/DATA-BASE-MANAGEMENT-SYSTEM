@@ -65,6 +65,7 @@ public class DBManager {
     public void AddTableToCurrentDatabase(Relation tab) {
         if (this.courammentDatabase == null) {
             System.out.println("No database selected");
+            return;
         }
         this.courammentDatabase.addTable(tab);
     }
@@ -76,6 +77,7 @@ public class DBManager {
     public Relation getTableFromCurrentDatabase(String nomTable) {
         if (this.courammentDatabase == null) {
             System.out.println("No database selected");
+            return null;
         }
         return this.courammentDatabase.getTable(courammentDatabase.indexOfTable(nomTable));
     }
@@ -86,6 +88,7 @@ public class DBManager {
     public void RemoveTableFromCurrentDatabase(String nomTable) {
         if (this.courammentDatabase == null) {
             System.out.println("No database selected");
+            return;
         }
         this.courammentDatabase.removeTable(this.courammentDatabase.indexOfTable(nomTable));
     }
@@ -93,6 +96,7 @@ public class DBManager {
     public void RemoveAllTablesFromCurrentDatabase() {
         if (this.courammentDatabase == null) {
             System.out.println("No database selected");
+            return;
         }
         this.courammentDatabase.removeAllTables();
     }
@@ -118,6 +122,7 @@ public class DBManager {
     public void RemoveTablesFromCurrentDatabase() {
         if (this.courammentDatabase == null) {
             System.out.println("No database selected");
+            return;
         }
         this.courammentDatabase.removeAllTables();
     }
@@ -195,6 +200,7 @@ public class DBManager {
     public void InsertRecordIntoTable(String nomTable, String[] values) {
         if (this.courammentDatabase == null) {
             System.out.println("No database selected");
+            return;
         }
         Relation tab = this.courammentDatabase.getTable(courammentDatabase.indexOfTable(nomTable));
         int nbvaleurs = values.length;
@@ -274,6 +280,7 @@ public class DBManager {
     public void SelectRecordsMultiTable(String[] columns, String[] tables, String[] conditions) {
         if (this.courammentDatabase == null) {
             System.out.println("No database selected");
+            return;
         }
         // Récupérer toutes les colonnes de toutes les tables
         Relation[] tabs = new Relation[tables.length];
